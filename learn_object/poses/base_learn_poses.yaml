@@ -1,0 +1,130 @@
+1:
+  header:
+    frame_id: /map
+  pose:
+    orientation:
+      w: 0.1199060299889897
+      x: 0.0
+      y: 0.0
+      z: 0.9927852456459452
+    position:
+      x: 2.92368749515198
+      y: 14.600776199631955
+      z: 0.0
+2:
+  header:
+    frame_id: base_link
+  pose:
+    orientation:
+      w: 0.9876883405951378
+      x: 0.0
+      y: 0.0
+      z: 0.15643446504023087
+    position:
+      x: -9.510565162951535
+      y: 3.090169943749474
+      z: 0.0
+3:
+  header:
+    frame_id: base_link
+  pose:
+    orientation:
+      w: 0.9510565162951536
+      x: 0.0
+      y: 0.0
+      z: 0.30901699437494734
+    position:
+      x: -8.090169943749475
+      y: 5.877852522924732
+      z: 0.0
+4:
+  header:
+    frame_id: base_link
+  pose:
+    orientation:
+      w: 0.8910065241883679
+      x: 0.0
+      y: 0.0
+      z: 0.45399049973954675
+    position:
+      x: -5.877852522924732
+      y: 8.090169943749475
+      z: 0.0
+5:
+  header:
+    frame_id: base_link
+  pose:
+    orientation:
+      w: 0.8090169943749475
+      x: 0.0
+      y: 0.0
+      z: 0.5877852522924731
+    position:
+      x: -3.0901699437494745
+      y: 9.510565162951535
+      z: 0.0
+6:
+  header:
+    frame_id: base_link
+  pose:
+    orientation:
+      w: 0.7071067811865476
+      x: 0.0
+      y: 0.0
+      z: 0.7071067811865475
+    position:
+      x: -6.123233995736766e-16
+      y: 10.0
+      z: 0.0
+7:
+  header:
+    frame_id: base_link
+  pose:
+    orientation:
+      w: 0.5877852522924731
+      x: 0.0
+      y: 0.0
+      z: 0.8090169943749475
+    position:
+      x: 3.0901699437494736
+      y: 9.510565162951536
+      z: 0.0
+8:
+  header:
+    frame_id: base_link
+  pose:
+    orientation:
+      w: 0.4539904997395468
+      x: 0.0
+      y: 0.0
+      z: 0.8910065241883678
+    position:
+      x: 5.87785252292473
+      y: 8.090169943749475
+      z: 0.0
+9:
+  header:
+    frame_id: base_link
+  pose:
+    orientation:
+      w: 0.30901699437494745
+      x: 0.0
+      y: 0.0
+      z: 0.9510565162951535
+    position:
+      x: 8.090169943749473
+      y: 5.877852522924733
+      z: 0.0
+10:
+  header:
+    frame_id: base_link
+  pose:
+    orientation:
+      w: 0.15643446504023092
+      x: 0.0
+      y: 0.0
+      z: 0.9876883405951378
+    position:
+      x: 9.510565162951535
+      y: 3.090169943749475
+      z: 0.0

@@ -1,0 +1,31 @@
+#goal definition
+string object_name
+string learning_data
+# float32 max_time
+---
+#result definition
+geometry_msgs/PoseStamped object_pose
+geometry_msgs/Point angles                  # [degree] TODO: Point isnt right dataformat for phi, psi and theta
+# geometry_msgs/Point rotation_stdev          # TODO: Point isnt right dataformat
+# geometry_msgs/Point translation_stdev       # float64[] stdev # [x,y,z,rotx, roty, rotz]
+float64 px_stdev
+float64 py_stdev
+float64 pz_stdev
+float64 rotx_stdev
+float64 roty_stdev
+float64 rotz_stdev
+# int16 end_state
+# float32 end_confidence
+---
+#feedback
+geometry_msgs/PoseStamped estimated_pose
+int16 state
+# float32 confidence
+
+# state:
+# 0 - STATE_SEARCHING: nothing detected
+# 1 - STATE_FINISH: detection successfully finished
+# 2 - STATE_FOUND_MATCH: matches are detected
+# 3 - STATE_REFINE: compute finale pose from 60 frames
+
+

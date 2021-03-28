@@ -1,0 +1,39 @@
+<?xml version="1.0" ?>
+<launch>
+
+  <!--Start detection-->
+  <node pkg="mir_vision" type="detection_server" name="detection_server" output="screen" >  
+    <param name="path_package"              type="str"    value="$(find mir_vision)" /> 
+    <param name="verbose"                   type="bool"   value="true" /> 
+    <param name="frameThreshold"            type="int"    value="20" />
+    <!-- <param name="parent_frame"         type="str"    value="camera_arm_color_optical_frame" /> 
+    <param name="child_frame"               type="str"    value="object" /> 
+    <param name="config_color"              type="str"    value="" /> 
+    <param name="config_depth"              type="str"    value="" /> 
+    <param name="model_color"               type="str"    value="$(find mir_vision)/model/teabox/teabox.cao" /> 
+    <param name="model_depth"               type="str"    value="" /> 
+    <param name="init_file"                 type="str"    value="" /> 
+    <param name="learning_data"             type="str"    value="learning/data-learned.bin" /> 
+    <param name="use_ogre"                  type="bool"   value="false" />
+    <param name="use_scanline"              type="bool"   value="false" />
+    <param name="use_edges"                 type="bool"   value="true" />
+    <param name="use_klt"                   type="bool"   value="true" />
+    <param name="use_depth"                 type="bool"   value="true" />
+    <param name="learn"                     type="bool"   value="false" />
+    <param name="auto_init"                 type="bool"   value="false" />
+    <param name="display_projection_error"  type="bool"   value="false" />
+    <param name="broadcast_transform"       type="bool"   value="true" />
+    <param name="proj_error_threshold"      type="double" value="25" /> -->
+  </node>
+
+  <!-- Publish Kamera Transform -->
+  <!-- Panda -->
+  <!-- <node pkg="tf" type="static_transform_publisher" name="Kamera_broadcaster" args="0.03 0 -0.06 0 0 0 1 panda_EE Kamera 10000" /> -->
+  <!-- Miranda -->
+  <arg name="RotY"  value="-1.5708" />
+  <arg name="RotX"  value="3.1415" />
+
+  <node pkg="tf" type="static_transform_publisher" name="Kamera_broadcaster" args="0.03 0 -0.06 0 0 0 1 miranda/panda/panda_EE miranda/panda/kamera 1000" />
+  <node pkg="tf" type="static_transform_publisher" name="helper2_broadcaster" args="0 0 0 $(arg RotX) $(arg RotY) 0 miranda/mir/base_link miranda/mir/ref_kamera 1000" />
+
+</launch>
