@@ -7,24 +7,39 @@ import errno
 import rospy
 from std_srvs.srv import Empty
 from robot_teacher.srv import SetName
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped
 
 
 class PoseFileHandler:
     def __init__(self):
         self.__filename=rospy.get_param("~file_name",str())  
         self.__save_srv=rospy.Service("~save_pose_unnamed",Empty,self.__saveCallbackUnnamed__)                    
-                           
-        self.__current_pose_sub=rospy.Subscriber("pose",PoseStamped,self.__currentPoseCallback__)
+
+        # Case Hardware                   
+        # self.__current_pose_sub=rospy.Subscriber("pose",PoseStamped,self.__currentPoseCallback__)
+        # Case Simulation
+        self.__current_pose_sub=rospy.Subscriber("pose",PoseWithCovarianceStamped,self.__currentPoseCallback__)
+
         self.__current_pose=PoseStamped()
         self.__poses=dict()
         self.__load__()
         
 
-    def __currentPoseCallback__(self,msg):            
-        self.__current_pose=msg
+    def __currentPoseCallback__(self,msg): 
+        # Case Simulation          
+        self.__current_pose.header.frame_id = msg.header.frame_id
+        self.__current_pose.pose.position.x = msg.pose.pose.position.x
+        self.__current_pose.pose.position.y = msg.pose.pose.position.y
+        self.__current_pose.pose.position.z = msg.pose.pose.position.z
+        self.__current_pose.pose.orientation.x = msg.pose.pose.orientation.x
+        self.__current_pose.pose.orientation.y = msg.pose.pose.orientation.y
+        self.__current_pose.pose.orientation.z = msg.pose.pose.orientation.z
+        self.__current_pose.pose.orientation.w = msg.pose.pose.orientation.w
+        # Case Hardware
+        # self.__current_pose=msg
+
     
-    def __saveCallbackUnnamed__(self,req):       
+    def __saveCallbackUnnamed__(self, req):       
         self.__poses[1]=self.__current_pose
         self.__save__()
 

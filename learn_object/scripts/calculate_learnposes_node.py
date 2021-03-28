@@ -101,16 +101,11 @@ if __name__=="__main__":
     current_pose = PoseStamped()
     for i in range(1,numberImages): # 0 bis 9        
         current_pose.header.frame_id = source_frame
-        current_pose.pose.position.x = -distance*math.cos(i*angle)
+        current_pose.pose.position.x = distance - distance*math.cos(i*angle)
         current_pose.pose.position.y = distance*math.sin(i*angle)
         current_pose.pose.position.z = 0.0
-        q =quaternion_from_euler(0, 0, i*angle)
+        q = quaternion_from_euler(0, 0, -i*angle)
         current_pose.pose.orientation = Quaternion(*q)
-        # current_pose.pose.orientation = quaternion_about_axis(i*angle, (0,0,1))
-        # current_pose.pose.orientation.x = 0
-        # current_pose.pose.orientation.y = 0
-        # current_pose.pose.orientation.z = 0
-        # current_pose.pose.orientation.w = 1
         
         succeeded = False
         while not succeeded:
@@ -123,9 +118,5 @@ if __name__=="__main__":
             except:
                 rate.sleep()
                 continue
-
-    # Save poses in new file
-
     
-    print("Calculated Poses")
-    #rospy.spin()
+    print("Calculated Poses Done")

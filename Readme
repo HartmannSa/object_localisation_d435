@@ -1,0 +1,103 @@
+
+SIMULATION
+1.) Welt
+roslaunch match_gazebo world_match.launch
+
+2.) Roboter
+-> Simulation:
+roslaunch mir_launch_sim mir.launch
+-> Hardware:
+roslaunch mir_launch_hardware mir.launch
+
+3.) Application
+roslaunch detection_localisation DetectionServer.launch
+roslaunch detection_localisation DetectionClient.launch
+
+
+
+********************************************************************
+VORGEHEN LERNEN
+1.) 
+roslaunch learn_object pose_teacher.launch
+! Launchfile auf Hardware vs Simulation anpassen
+
+Hardware: Navigiere Robo mit ps4 Controller zur ersten Suchpose, sodass Objekt gut sichtbar in Camera ist -> X
+Simulation: position in rviz über navgoal vorgeben und speichern mit:
+rosservice call /pose_teacher/save_pose_unnamed "{}" 
+
+2.) 
+roslaunch learn_object calculate_learnposes.launch
+
+Berechne weitere Lernposen und speicher diese in .yaml file
+Testen der erzeugten Posen in Simulation über:
+rostopic pub /move_base/goal move_base_msgs/MoveBaseActionGoal "header:
+  seq: 0
+  stamp:
+    secs: 0
+    nsecs: 0
+  frame_id: ''
+goal_id:
+  stamp:
+    secs: 0
+    nsecs: 0
+  id: ''
+goal:
+  target_pose:
+    header:
+      seq: 0
+      stamp:
+        secs: 0
+        nsecs: 0
+      frame_id: 'map'
+    pose:
+      position:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+      orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        w: 1" 
+
+rostopic pub /move_base/goal move_base_msgs/MoveBaseActionGoal "header:
+  seq: 0
+  stamp:
+    secs: 0
+    nsecs: 0
+  frame_id: ''
+goal_id:
+  stamp:
+    secs: 0
+    nsecs: 0
+  id: ''
+goal:
+  target_pose:
+    header:
+      seq: 0
+      stamp:
+        secs: 0
+        nsecs: 0
+      frame_id: 'map'
+    pose:
+      position:
+        x: 2.0086488221320598
+        y: 2.021197038091382
+        z: 0.0
+      orientation:
+        x: 0.0
+        y: 0.0
+        z: -0.696273668817634
+        w: 0.7177764123396868"
+
+
+3.) Automatische Navigation des Robos zu den berechneten Posen und Fotos aufnehmen
+
+
+
+
+
+
+
+
+ 

@@ -8,17 +8,20 @@
     </node> -->
     <node name="pose_teacher" type="teach_one_pose_node.py" pkg="learn_object" output="screen">
         <param name="file_name" value="$(find learn_object)/poses/$(arg file_name)"/>
-        <remap from="pose" to="miranda/mir/robot_pose_stamped"/>
+        <!-- Hardware --> 
+        <!-- <remap from="pose" to="miranda/mir/robot_pose_stamped"/>         -->
+        <!-- Simulation -->
+        <remap from="pose" to="/amcl_pose"/> 
     </node> 
 
     <!-- Pakage from Tutorials -> Match Mobile Robots -> general hardwre helper -->
-    <node name="state_machine_controller" pkg="ps4_controller" type="ps4_diffdrive_services.py" output="screen">
+    <!-- <node name="state_machine_controller" pkg="ps4_controller" type="ps4_diffdrive_services.py" output="screen">
             <param name="allow_cmd_vel" value="true"/>
             <param name="translation" value="0.2"/>
             <param name="rotation" value="0.5"/>
             <remap from="joy" to="/joy" />
             <param name="rate" value="100"/>
             <remap from="X" to="/pose_teacher/save_pose_unnamed"/>   
-    </node>     
+    </node>      -->
 </launch>
 
