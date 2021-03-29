@@ -1,0 +1,14 @@
+<launch>   
+    <arg name="filename_poses"  default="base_learn_poses.yaml"/>
+    <arg name="object"          default="Object"/>
+
+    <node name="camera_server" type="camera_node.py" pkg="learn_object" output="screen">
+    </node> 
+
+    <node name="learnphotos_taker" type="take_learnphotos_node.py" pkg="learn_object" output="screen">
+        <param name="filename_poses"    value="$(find learn_object)/poses/$(arg filename_poses)"/>
+        <param name="path_object"       value="$(find learn_object)/model/$(arg object)/"/>
+        <param name="object_name"       value="$(arg object)"/>
+    </node> 
+</launch>
+

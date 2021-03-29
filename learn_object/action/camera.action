@@ -1,0 +1,12 @@
+#goal definition
+bool stream
+# bool depth
+# bool show_keypoints
+# float32 max_time
+---
+#result definition
+bool success
+---
+#feedback
+
+

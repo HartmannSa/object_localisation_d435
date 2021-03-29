@@ -8,7 +8,7 @@ import errno
 import math
 import geometry_msgs.msg
 from geometry_msgs.msg import Pose, PoseStamped, PoseArray, Quaternion
-from tf.transformations import quaternion_from_euler
+from tf.transformations import quaternion_from_euler, euler_from_quaternion
 
 def dictToPose(poses):
     pose_list=dict()
@@ -88,7 +88,7 @@ if __name__=="__main__":
         with open(filename_load, 'r') as infile:
             raw=yaml.safe_load(infile)
             if raw:
-                poses=dictToPose(raw)  
+                poses=dictToPose(raw) 
         print("Loaded pose: ")
         print(poses)
         if len(poses) != 1:
@@ -97,21 +97,28 @@ if __name__=="__main__":
         rospy.logerr("Could not load %s" %filename_load )    
     
     # Calculate learn poses
-    angle = angleRange_rad/numberImages
-    current_pose = PoseStamped()
-    for i in range(1,numberImages): # 0 bis 9        
-        current_pose.header.frame_id = source_frame
-        current_pose.pose.position.x = distance - distance*math.cos(i*angle)
-        current_pose.pose.position.y = distance*math.sin(i*angle)
-        current_pose.pose.position.z = 0.0
+    angle = angleRange_rad/(numberImages-1)
+    first_pose = poses[1] 
+    print(first_pose)
+    first_rot = euler_from_quaternion([ first_pose.pose.orientation.x, first_pose.pose.orientation.y,first_pose.pose.orientation.z, first_pose.pose.orientation.w])
+    new_pose = PoseStamped()
+
+    for i in range(1,numberImages):         
+        new_pose.header.frame_id = source_frame
+
+        new_pose.pose.position.x = first_pose.pose.position.x + distance - distance*math.cos(i*angle)
+        new_pose.pose.position.y = first_pose.pose.position.y + distance*math.sin(i*angle)
+        new_pose.pose.position.z = 0.0
+        
+        # q = quaternion_from_euler(0, 0, first_rot[2]-i*angle)
         q = quaternion_from_euler(0, 0, -i*angle)
-        current_pose.pose.orientation = Quaternion(*q)
+        new_pose.pose.orientation = Quaternion(*q)
         
         succeeded = False
         while not succeeded:
             try:
                 transform = tfBuffer.lookup_transform(target_frame, source_frame, rospy.Time(), rospy.Duration(2.0))
-                pose_transformed = tf2_geometry_msgs.do_transform_pose(current_pose, transform)
+                pose_transformed = tf2_geometry_msgs.do_transform_pose(new_pose, transform)
                 poses[len(poses)+1]=pose_transformed
                 save(poses, filename_save)
                 succeeded = True
