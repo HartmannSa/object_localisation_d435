@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(learn_object)
 
+set( sample_dir ${CMAKE_CURRENT_SOURCE_DIR}/src/)
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
 
@@ -14,6 +15,13 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   actionlib 
   actionlib_msgs
+)
+find_package(VISP REQUIRED 
+   visp_core 
+   visp_mbt 
+   visp_io 
+   visp_gui 
+   visp_sensor
 )
 
 ## System dependencies are found with CMake's conventions
@@ -120,6 +128,7 @@ catkin_package(
 include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
+  ${VISP_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -136,6 +145,7 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/learn_object_node.cpp)
+add_executable( learnKeypoints ${sample_dir}learn_keypoints.cpp )
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -151,7 +161,8 @@ include_directories(
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
-
+target_link_libraries(learnKeypoints ${catkin_LIBRARIES} ${VISP_LIBRARIES})
+visp_copy_dir(learnKeypoints "${CMAKE_CURRENT_SOURCE_DIR}" model)
 #############
 ## Install ##
 #############

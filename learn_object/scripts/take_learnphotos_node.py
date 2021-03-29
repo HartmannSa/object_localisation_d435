@@ -53,7 +53,6 @@ def movebase_client(target, index):
         return client.get_result()
 
 
-
 if __name__=="__main__":
     # try:
     rospy.init_node("learnObject_takePhotos") 
@@ -73,20 +72,10 @@ if __name__=="__main__":
         # print("Loaded pose: ")
         # print(poses) 
     else:
-        rospy.logerr("Could not load %s" %filename_poses )    
+        rospy.logerr("Could not load %s" %filename_poses )      
     
-    # Wait for Camera Server to come up
-    cam_client = actionlib.SimpleActionClient('camera_stream', cameraAction)
-    while( not cam_client.wait_for_server(rospy.Duration(4)) ):
-        rospy.loginfo("Waiting for Camera Server to come up")
-    
-    start_cam = cameraGoal()
-    start_cam.stream = True
-    cam_client.send_goal(start_cam)
-    
-    # cam_pub = rospy.Publisher('Camera/save_Frame', saveFrame)
-    # msg = saveFrame()
-    # msg.path = path_object
+    # Camera needs a few seconds to launch
+    rospy.sleep(3.0)
 
     # Loop
     # Navigate to Pose, when SUCCEDED take a pohto and save it
@@ -95,29 +84,19 @@ if __name__=="__main__":
         pose=poses[elem]   
         # Nav to pose_msg
         result = movebase_client(pose, elem)
+        rospy.sleep(3.0)
+
         if result:
             rospy.loginfo("Reached pose %d" %elem)
             # Take Photo
-            # msg.filename = object_name + str(elem) + '.jpg'
-            # cam_pub.publish(msg)
             rospy.wait_for_service('camera_saveFrame')
             try:
                 save_srv = rospy.ServiceProxy('camera_saveFrame', saveFrame)
-                saved = save_srv(path_object, object_name + str(elem) + '.jpg')
+                saved = save_srv(path_object, object_name + str(elem) + "_color.jpg')
             except rospy.ServiceException as e:
-                print("Service call failed: %s"%e)
-            rospy.sleep(2.0)
+                print("Service call save camera frame failed: %s"%e)
+            rospy.sleep(1.0)
     
     print("Done Taking Photos")
+    rospy.spin()
 
-    cam_client.cancel_goal()   
-    cam_client.wait_for_result(rospy.Duration(30))
-    # if not canceld_within_time:
-    #     rospy.logerr("was canceld")
-    # else:
-    #     print(cam_client.get_result())
-    #     rospy.signal_shutdown("Action server not available!")    
-
-    # except Exception as e:
-    #     print(e)
-    #     pass 

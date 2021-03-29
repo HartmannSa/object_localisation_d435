@@ -1,0 +1,13 @@
+<?xml version="1.0" ?>
+<launch>
+  <arg name="object"   value="Goesser" />
+
+  <!--Start Learning-->
+  <node pkg="learn_object" type="learnKeypoints" name="learn_keypoints" output="screen" >
+    <param name="object_name"               type="str"    value="$(arg object)" /> 
+    <param name="feature"                   type="str"    value="SURF" />
+    <param name="path"                      type="str"    value="$(find learn_object)/model/$(arg object)/"/> 
+    <param name="binMode"                   type="bool"   value="true" />  
+    <param name="maxTrainImageNumber"       type="int"    value="5" />
+  </node>
+</launch>

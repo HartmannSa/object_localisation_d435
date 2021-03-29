@@ -91,7 +91,29 @@ goal:
         w: 0.7177764123396868"
 
 
-3.) Automatische Navigation des Robos zu den berechneten Posen und Fotos aufnehmen
+3.)
+roslaunch learn_object take_learnphotos.launch
+
+Automatische Navigation des Robos zu den berechneten Posen und Fotos aufnehmen
+
+4)
+
+Manually initialise the photos by clicking the 4 corners of the model
+
+
+*****************************************************************************************+
+ROSBAG 
+
+mkdir ~/bagfiles
+cd ~/bagfiles
+rosbag record -a
+# -a = record all topics
+
+rosbag record -O subset /turtle1/cmd_vel /turtle1/pose
+# record only the 2 topics
+
+rosbag info <your bagfile>
+rosbag play <your bagfile>
 
 
 

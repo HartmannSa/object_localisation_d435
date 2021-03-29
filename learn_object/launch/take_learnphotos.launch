@@ -1,8 +1,8 @@
 <launch>   
     <arg name="filename_poses"  default="base_learn_poses.yaml"/>
-    <arg name="object"          default="Object"/>
+    <arg name="object"          default="goesser"/>
 
-    <node name="camera_server" type="camera_node.py" pkg="learn_object" output="screen">
+    <node name="camera_stream" type="camera_node.py" pkg="learn_object" output="screen">
     </node> 
 
     <node name="learnphotos_taker" type="take_learnphotos_node.py" pkg="learn_object" output="screen">
