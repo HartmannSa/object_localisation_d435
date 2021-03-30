@@ -1,0 +1,8 @@
+target_frame: miranda/panda/d435_bottom_screw_frame
+source_frame: miranda/panda/panda_EE
+x: 0.05
+y: 0.0
+z: -0.07
+yaw: 0.0
+roll: 3.14159265
+pitch: -1.57079633

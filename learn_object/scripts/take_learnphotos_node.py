@@ -92,7 +92,7 @@ if __name__=="__main__":
             rospy.wait_for_service('camera_saveFrame')
             try:
                 save_srv = rospy.ServiceProxy('camera_saveFrame', saveFrame)
-                saved = save_srv(path_object, object_name + str(elem) + "_color.jpg')
+                saved = save_srv(path_object, object_name + str(elem) + '_color.jpg')
             except rospy.ServiceException as e:
                 print("Service call save camera frame failed: %s"%e)
             rospy.sleep(1.0)

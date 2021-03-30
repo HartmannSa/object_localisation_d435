@@ -1,0 +1,10 @@
+<?xml version="1.0" ?>
+<launch>
+    
+    <arg name="tf_prefix" default=""/>
+    <arg name="robot_arm" default=""/>  
+
+    <!-- URDF -->
+    <param name="cam_description" command="$(find xacro)/xacro --inorder $(find camera_d435)/description/urdf/camera.urdf.xacro" />
+
+</launch>

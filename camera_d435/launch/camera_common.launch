@@ -1,0 +1,25 @@
+<launch>   
+    <arg name="tf_prefix" default=""/>  <!-- e.g. miranda/panda -->
+    <arg name="robot_arm" default=""/>  <!-- e.g. panda -->
+   
+    <!-- <include file="$(find camera_d435)/description/launch/upload_cam_urdf.launch" ns="$(arg robot_arm)" pass_all_args="true"> -->
+    <include file="$(find camera_d435)/description/launch/upload_cam_urdf.launch" pass_all_args="true">
+        <arg name="tf_prefix" value="$(arg tf_prefix)"/>        
+    </include>
+
+    <!-- Add a Transformation from panda to cam for closed tf tree -->
+    <node name="$(arg robot_arm)_cam_broadcaster" type="static_tf_yaml_parser2.py"  pkg="camera_d435">
+        <rosparam command="load" file="$(find camera_d435)/description/config/$(arg robot_arm)_d435_transform.yaml"/>
+    </node> 
+
+
+    <!-- Robot state publisher for publishing the cam tfs-->
+    <node name="cam_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">
+        <remap from="robot_description" to="cam_description" />
+        <param name="tf_prefix" value="$(arg tf_prefix)"/>
+        <!-- <remap from="/tf"        to="tf_rss" />
+        <remap from="/tf_static" to="tf_static_rss" /> -->
+    </node>
+
+      
+</launch>

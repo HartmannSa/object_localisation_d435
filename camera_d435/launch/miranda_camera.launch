@@ -1,0 +1,9 @@
+<launch>   
+    <arg name="robot_name" default="miranda"/>  
+    <arg name="robot_arm" default="panda"/> 
+   
+    <include file="$(find camera_d435)/launch/$(arg robot_arm)_camera.launch" ns="$(arg robot_name)" pass_all_args="true">
+        <arg name="tf_prefix" value="$(arg robot_name)"/>  
+        <arg name="robot_arm" value="$(arg robot_arm)"/>       
+    </include>
+</launch>
