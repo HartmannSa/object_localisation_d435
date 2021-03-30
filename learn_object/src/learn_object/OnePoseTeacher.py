@@ -12,13 +12,14 @@ from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped
 
 class PoseFileHandler:
     def __init__(self):
-        self.__filename=rospy.get_param("~file_name",str())  
-        self.__save_srv=rospy.Service("~save_pose_unnamed",Empty,self.__saveCallbackUnnamed__)                    
-
-        # Case Hardware                   
-        # self.__current_pose_sub=rospy.Subscriber("pose",PoseStamped,self.__currentPoseCallback__)
-        # Case Simulation
-        self.__current_pose_sub=rospy.Subscriber("pose",PoseWithCovarianceStamped,self.__currentPoseCallback__)
+        self.__filename = rospy.get_param("~file_name",str())  
+        self.__Hardware = rospy.get_param("~Hardware", False)  
+        self.__save_srv=rospy.Service("~save_pose_unnamed",Empty,self.__saveCallbackUnnamed__)                  
+        
+        if (self.__Hardware): # Case Hardware
+            self.__current_pose_sub=rospy.Subscriber("pose",PoseStamped,self.__currentPoseCallback__)
+        else: # Case Simulation
+            self.__current_pose_sub=rospy.Subscriber("pose",PoseWithCovarianceStamped,self.__currentPoseCallback__)
 
         self.__current_pose=PoseStamped()
         self.__poses=dict()
@@ -26,17 +27,17 @@ class PoseFileHandler:
         
 
     def __currentPoseCallback__(self,msg): 
-        # Case Simulation          
-        self.__current_pose.header.frame_id = msg.header.frame_id
-        self.__current_pose.pose.position.x = msg.pose.pose.position.x
-        self.__current_pose.pose.position.y = msg.pose.pose.position.y
-        self.__current_pose.pose.position.z = msg.pose.pose.position.z
-        self.__current_pose.pose.orientation.x = msg.pose.pose.orientation.x
-        self.__current_pose.pose.orientation.y = msg.pose.pose.orientation.y
-        self.__current_pose.pose.orientation.z = msg.pose.pose.orientation.z
-        self.__current_pose.pose.orientation.w = msg.pose.pose.orientation.w
-        # Case Hardware
-        # self.__current_pose=msg
+        if (self.__Hardware): # Case Hardware
+            self.__current_pose=msg
+        else: # Case Simulation              
+            self.__current_pose.header.frame_id = msg.header.frame_id
+            self.__current_pose.pose.position.x = msg.pose.pose.position.x
+            self.__current_pose.pose.position.y = msg.pose.pose.position.y
+            self.__current_pose.pose.position.z = msg.pose.pose.position.z
+            self.__current_pose.pose.orientation.x = msg.pose.pose.orientation.x
+            self.__current_pose.pose.orientation.y = msg.pose.pose.orientation.y
+            self.__current_pose.pose.orientation.z = msg.pose.pose.orientation.z
+            self.__current_pose.pose.orientation.w = msg.pose.pose.orientation.w
 
     
     def __saveCallbackUnnamed__(self, req):       

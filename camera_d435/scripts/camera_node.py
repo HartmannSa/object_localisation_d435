@@ -19,17 +19,35 @@ class Camera:
         self.__config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
         self.__config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)        
         self.__pipeline.start(self.__config)
-        # self.__frameSub=rospy.Subscriber("Camera/save_Frame",saveFrame,self.__saveFrameSub__)
+        self.__profile = self.__pipeline.get_active_profile()
         self.__saveFrame_srv=rospy.Service("camera_saveFrame",saveFrame,self.__saveFrameSrv__)
 
-        # self._as = actionlib.SimpleActionServer("camera_stream", cameraAction, execute_cb=self.__execute_cb, auto_start = False)
-        # self._as.start()
-        # self.__result = cameraResult()
-    
     
     def __del__(self):        
         self.__pipeline.stop()
         cv2.destroyAllWindows()
+
+    def __printParams__(self):
+        depth_profile = rs.video_stream_profile(self.__profile.get_stream(rs.stream.depth))
+        color_profile = rs.video_stream_profile(self.__profile.get_stream(rs.stream.color))
+        depth_intrinsics = depth_profile.get_intrinsics()
+        color_intrinsics = color_profile.get_intrinsics()
+        cd = color_intrinsics.coeffs
+        dd = depth_intrinsics.coeffs
+        # print("Kamera Parameter")
+        # print(depth_profile)
+        # print(color_profile)        
+        rospy.loginfo("Sensor internal camera parameters for color camera: ")
+        # print(color_intrinsics)
+        rospy.loginfo("  Principal point: \t px = %f \t py = %f", color_intrinsics.ppx, color_intrinsics.ppy)
+        rospy.loginfo("  Focal length:    \t fx = %f \t fy = %f", color_intrinsics.fx, color_intrinsics.fy)
+        rospy.loginfo("  Distortion coefficients: %.1f %.1f %.1f %.1f", cd[0], cd[1], cd[2], cd[3])
+        rospy.loginfo("Sensor internal camera parameters for depth camera: ")
+        # print(depth_intrinsics)
+        rospy.loginfo("  Principal point: \t px = %f \t py = %f", depth_intrinsics.ppx, depth_intrinsics.ppy)
+        rospy.loginfo("  Focal length:    \t fx = %f \t fy = %f", depth_intrinsics.fx, depth_intrinsics.fy)
+        rospy.loginfo("  Distortion coefficients: %.1f %.1f %.1f %.1f", dd[0], dd[1], dd[2], dd[3])
+                
 
     def __saveFrameSrv__(self, req):
         rospy.loginfo("Saving frame")
@@ -88,6 +106,7 @@ if __name__=="__main__":
     rospy.init_node("learnObject_cameraServer")
     cam = Camera()
     rospy.loginfo("Start Streaming")
+    cam.__printParams__()
     while not rospy.is_shutdown():
         cam.__stream__()
 

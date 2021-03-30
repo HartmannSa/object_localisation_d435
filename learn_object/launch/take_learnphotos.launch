@@ -2,8 +2,7 @@
     <arg name="filename_poses"  default="base_learn_poses.yaml"/>
     <arg name="object"          default="goesser"/>
 
-    <node name="camera_stream" type="camera_node.py" pkg="learn_object" output="screen">
-    </node> 
+    <include file="$(find camera_d435)/launch/camera_stream.launch"/>     
 
     <node name="learnphotos_taker" type="take_learnphotos_node.py" pkg="learn_object" output="screen">
         <param name="filename_poses"    value="$(find learn_object)/poses/$(arg filename_poses)"/>

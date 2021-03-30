@@ -125,11 +125,11 @@ public:
     void createLearnImages(){
         // Camera Parameter
         Icolor_.resize(480, 640);
-        double u0 = Icolor_.getWidth()  / 2.;
-        double v0 = Icolor_.getHeight() / 2.;
-        double px = 600;
-        double py = 600;
-        cam_color_.initPersProjWithoutDistortion(px, py, u0, v0);
+        double u0 = Icolor_.getWidth()  / 2.;   // 319.999634 principal point
+        double v0 = Icolor_.getHeight() / 2.;   // 237.854675
+        double fx = 615.718018;                 // ratio between focal length and size of a pixel. 
+        double fy = 616.188049;
+        cam_color_.initPersProjWithoutDistortion(fx, fy, u0, v0);
         // vpRealSense2 realsense;
         // cam_color_ = realsense.getCameraParameters(RS2_STREAM_COLOR, vpCameraParameters::perspectiveProjWithoutDistortion); //perspectiveProjWithDistortion        
         cam_color_.printParameters();

@@ -7,11 +7,9 @@
         <param name="coalesce_interval" value="0.001"/>
     </node>
     <node name="pose_teacher" type="teach_one_pose_node.py" pkg="learn_object" output="screen">
-        <param name="file_name" value="$(find learn_object)/poses/$(arg file_name)"/>
-        <!-- Hardware --> 
+        <param name="file_name"                 value="$(find learn_object)/poses/$(arg file_name)"/>
+        <param name="Hardware"  type="bool"     value="True"/>
         <remap from="pose" to="/robot_pose_stamped"/>        
-        <!-- Simulation -->
-        <!-- <remap from="pose" to="/amcl_pose"/>  -->
     </node> 
 
     <!-- Pakage from Tutorials -> Match Mobile Robots -> general hardwre helper -->
@@ -24,7 +22,7 @@
             <remap from="X" to="/pose_teacher/save_pose_unnamed"/>   
     </node> 
 
-    <node name="camera_stream" type="camera_node.py" pkg="learn_object" output="screen">
-    </node>     
+    <include file="$(find camera_d435)/launch/camera_stream.launch"/> 
+         
 </launch>
 
