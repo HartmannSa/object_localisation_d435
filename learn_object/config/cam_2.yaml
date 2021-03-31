@@ -1,0 +1,8 @@
+target_frame: cam_footprint_2
+source_frame: cam_footprint
+x: 1.0
+y: 1.0
+z: 0.0
+roll: 0.0
+pitch: 0.0
+yaw: -1.5708

@@ -1,17 +1,30 @@
 <launch>   
     <arg name="filename_load" default="first_pose.yaml"/>
     <arg name="filename_save" default="base_learn_poses.yaml"/>
-    
+    <arg name="filename_cam_pose" default="cam_learn_poses.yaml"/>
+
+
+    <!-- <node pkg="tf" type="static_transform_publisher" name="CalcHelper_broadcaster" args="0.0 -0.02 0.0 0 0 0 1 base_link cam_footprint 1000" /> -->
+    <!-- Add a Transformation from panda to cam for closed tf tree -->
+    <node name="CalcHelper_broadcaster" type="static_tf_yaml_parser2.py"  pkg="helper">
+        <rosparam command="load" file="$(find learn_object)/config/cam_base_helper_transform.yaml"/>
+    </node> 
+
     <node name="pose_calculator" type="calculate_learnposes_node.py" pkg="learn_object" output="screen">
         <param name="filename_load_pose"    value="$(find learn_object)/poses/$(arg filename_load)"/>
         <param name="filename_save_poses"   value="$(find learn_object)/poses/$(arg filename_save)"/>
-        <!-- <param name="source_frame"          value="base_link"/>
-        <param name="target_frame"          value="map"/> -->
-        <param name="source_frame"          value="base_link"/>
+        <param name="filename_cam_save"     value="$(find learn_object)/poses/$(arg filename_cam_pose)"/>
+        <!-- <param name="source_frame"          value="base_link"/> -->
+        <param name="source_frame"          value="cam_footprint"/>
         <param name="target_frame"          value="map"/>
-        <param name="number_of_images"      value="5"/>
+        <param name="number_of_images"      value="3"/>
         <param name="angle_range"           value="180"  />
-        <param name="distance"              value="1.5"/>
+        <param name="distance"              value="1"/>
     </node> 
+
+    <node name="CalcHelper_broadcaster2" type="static_tf_yaml_parser2.py"  pkg="helper">
+        <rosparam command="load" file="$(find learn_object)/config/cam_2.yaml"/>
+    </node> 
+
 </launch>
 

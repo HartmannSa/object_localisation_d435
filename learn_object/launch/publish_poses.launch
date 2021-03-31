@@ -1,0 +1,13 @@
+<launch>   
+    <arg name="filename_poses"  default="base_learn_poses.yaml"/>
+    <!-- <arg name="filename_poses"  default="cam_learn_poses.yaml"/> -->
+    <arg name="filename_cam_poses" default="cam_learn_poses.yaml"/>
+
+    <node name="poses_publisher" type="publish_poses_node.py" pkg="learn_object" output="screen">
+        <param name="filename_poses"        value="$(find learn_object)/poses/$(arg filename_poses)"/>
+        <param name="filename_cam_poses"    value="$(find learn_object)/poses/$(arg filename_cam_poses)"/>
+    </node> 
+
+
+</launch>
+

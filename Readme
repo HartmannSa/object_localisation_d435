@@ -116,6 +116,134 @@ rosbag info <your bagfile>
 rosbag play <your bagfile>
 
 
++++++++++++++++++++++++++++++++++++++++++
+1:
+  header:
+    frame_id: map
+  pose:
+    orientation:
+      w: 0.9999128994664781
+      x: 0.0
+      y: 0.0
+      z: -0.013198237781643868
+    position:
+      x: 5.965186037579429
+      y: 21.417526222220065
+      z: 0.0
+2:
+  header:
+    frame_id: map
+  pose:
+    orientation:
+      w: 0.7699310782537114
+      x: 0.0
+      y: 0.0
+      z: -0.6381270521918636
+    position:
+      x: 8.213358310608807
+      y: 22.240972388379365
+      z: 0.0
+3:
+  header:
+    frame_id: map
+  pose:
+    orientation:
+      w: -0.0931995206160208
+      x: 0.0
+      y: 0.0
+      z: 0.9956474523429184
+    position:
+      x: 9.276434351213325
+      y: 21.515666017324605
+      z: 0.0
+
+Rechnung 2
+1:
+  header:
+    frame_id: base_link
+  pose:
+    orientation:
+      w: 0.999988639269465
+      x: 0.0
+      y: 0.0
+      z: -0.004766689837174855
+    position:
+      x: 5.909273962475611
+      y: 21.412878667329398
+      z: 0.0
+2:
+  header:
+    frame_id: base_link
+  pose:
+    orientation:
+      w: 0.7071067811865476
+      x: 0.0
+      y: 0.0
+      z: -0.7071067811865475
+    position:
+      x: 1.21
+      y: 1.11
+      z: 0.0
+3:
+  header:
+    frame_id: base_link
+  pose:
+    orientation:
+      w: -6.123233995736766e-17
+      x: 0.0
+      y: 0.0
+      z: 1.0
+    position:
+      x: 2.12
+      y: 0.20000000000000012
+      z: 0.0
+
+
+
+c)
+
+1:
+  header:
+    frame_id: map
+  pose:
+    orientation:
+      w: 0.9999782024761222
+      x: 0.0
+      y: 0.0
+      z: 0.006602618618658114
+    position:
+      x: 6.013370836243981
+      y: 21.416009086237725
+      z: 0.0
+2:
+  header:
+    frame_id: map
+  pose:
+    orientation:
+      w: 0.7117601244084423
+      x: 0.0
+      y: 0.0
+      z: -0.7024226116107587
+    position:
+      x: 7.184912201500916
+      y: 22.821601783106885
+      z: 0.0
+3:
+  header:
+    frame_id: map
+  pose:
+    orientation:
+      w: -0.006602618618658175
+      x: 0.0
+      y: 0.0
+      z: 0.9999782024761222
+    position:
+      x: 8.387881346319956
+      y: 21.847401990141734
+      z: 0.0
+
+
+
 
 
 

@@ -8,7 +8,7 @@
     </include>
 
     <!-- Add a Transformation from panda to cam for closed tf tree -->
-    <node name="$(arg robot_arm)_cam_broadcaster" type="static_tf_yaml_parser2.py"  pkg="camera_d435">
+    <node name="$(arg robot_arm)_cam_broadcaster" type="static_tf_yaml_parser2.py"  pkg="helper">
         <rosparam command="load" file="$(find camera_d435)/description/config/$(arg robot_arm)_d435_transform.yaml"/>
     </node> 
 
