@@ -22,6 +22,7 @@
 
 #include <sstream>
 #include <string>
+#include <fstream>
 
 template<class T>
 std::string toString(const T &value) {
@@ -35,17 +36,18 @@ class Detection
 {
 protected:
     ros::NodeHandle n_;    
-    std::string path_;       
+    std::string path_; 
+    std::string pathModel_;  
     std::string feature_;
     std::string learningExtension_;
-    int maxTrainImageNumber;
-    bool keypoints;
+    int maxTrainImageNumber_;
     bool binMode_;
+    bool saveKeypointsGlobal_;
+    std::vector<int> numberKeypoints_;
 
     // Camera Settings
     vpCameraParameters cam_color_; 
     vpImage<vpRGBa> Icolor_; 
-    vpHomogeneousMatrix cMo;
 
     std::string detectorName_;
     std::string extractorName_;
@@ -53,17 +55,19 @@ protected:
     std::string configurationFile_; 
     
 public:
-    std::string object_name;
+    std::string objectName_;     
 
     Detection(std::string name)
     {        
         ros::NodeHandle nh("~");
-        nh.param<std::string>("object_name", object_name, "Teabox" );                               // name of object to learn
+        nh.param<std::string>("object_name", objectName_, "Teabox" );                               // name of object to learn
         nh.param<std::string>("feature", feature_, "ORB");                                           // select feature for the keypoints (e.g. "SURF", "SIFT")
-        nh.param<std::string>("path", path_, "");                                                   // path to mir_vision (where model/ and config/ are saved)
+        nh.param<std::string>("path", pathModel_, "");                                                   // path to mir_vision (where model/ and config/ are saved)
+        path_ = pathModel_ + objectName_ + "/";
+        nh.param<bool>("saveKeypointsGlobal", saveKeypointsGlobal_, false);                                                  // If true: learningData is saved as .bin, otherwise it is saved as .xml
         nh.param<bool>("binMode", binMode_, true);                                                  // If true: learningData is saved as .bin, otherwise it is saved as .xml
         learningExtension_ = binMode_ ? ".bin" : ".xml";              
-        nh.param<int>("maxTrainImageNumber", maxTrainImageNumber, 3);                               // number of image(s) to save
+        nh.param<int>("maxTrainImageNumber", maxTrainImageNumber_, 3);                               // number of image(s) to save
     }
 
     ~Detection(void) {}      
@@ -107,10 +111,11 @@ public:
         vpHomogeneousMatrix cMo;
         tracker.getPose(cMo);
         vpKeyPoint::compute3DForPointsInPolygons(cMo, cam_color_, trainKeyPoints, polygons, roisPt, points3f);
-        // *** Save the Keypoints and their 3D coordingates in the keypoint and a file
-        keypoint_learning.buildReference(I, trainKeyPoints, points3f, true, id);      
+        // *** Save the Keypoints and their 3D coordingates in the keypoint and a file (per image)
+        keypoint_learning.buildReference(I, trainKeyPoints, points3f, true, id);    // (..., points3f, bool append, calss id)  
         // keypoint_learning.saveLearningData(objectNumberPath + "_learning_data.bin", true, false);
-        
+        numberKeypoints_.push_back(trainKeyPoints.size());
+
         // *** Display the learned Keypoints
         vpDisplay::display(Icolor_);
         for (std::vector<cv::KeyPoint>::const_iterator it = trainKeyPoints.begin(); it != trainKeyPoints.end(); ++it) {
@@ -121,7 +126,38 @@ public:
         vpDisplay::displayText(Icolor_, 10, 10, "Learning step: keypoints are detected on visible teabox faces", vpColor::red);
     }
     
-    
+    void saveNumberKeypoints(std::string filename, bool saveGlobal = false){
+        std::ofstream file;        
+        file.open((path_ + filename).c_str(), std::ifstream::out); 
+        if (file.is_open())
+        {
+           file << objectName_ << std::endl; 
+           file << "image number; number of keypoints" << std::endl;
+           for (int i = 1; i <= maxTrainImageNumber_; i++)
+           {
+               file << i << "; " << numberKeypoints_[i-1] << std::endl;
+           }
+           file.close();
+        } else ROS_INFO("Unable to open file %s", (path_ + filename).c_str() ); 
+
+        if (saveGlobal) {
+            std::ofstream f;
+            f.open((pathModel_ + filename).c_str(), std::ifstream::app); 
+            if (f.is_open())
+            {
+                f << objectName_ << "; " ;          
+                for (int i = 1; i <= maxTrainImageNumber_; i++)
+                {
+                    f << numberKeypoints_[i-1] << "; ";
+                }
+                f  <<  std::endl; 
+                f.close();
+            } else ROS_INFO("Unable to open file %s", (pathModel_ + filename).c_str() ); 
+
+        }
+ 
+    } 
+
     void createLearnImages(){
         // Camera Parameter
         Icolor_.resize(480, 640);
@@ -136,13 +172,12 @@ public:
         ROS_INFO("Sensor internal camera parameters for color camera: ");
         ROS_INFO("  px = %f \t py = %f", cam_color_.get_px(), cam_color_.get_py());
         ROS_INFO("  u0 = %f \t v0 = %f", cam_color_.get_u0(), cam_color_.get_v0());
-        ROS_INFO("  kud = %f \t kdu = %f", cam_color_.get_kud(), cam_color_.get_kdu());
-        
+        ROS_INFO("  kud = %f \t kdu = %f", cam_color_.get_kud(), cam_color_.get_kdu()); 
         
         vpDisplayOpenCV d_c;
         d_c.init(Icolor_,100, 50, "Color Stream"); 
         
-        std::string objectPath = path_ + object_name;
+        std::string objectPath = path_ + objectName_;
         std::string objectNumberPath;
         std::string ext = ".jpg";
 
@@ -186,9 +221,9 @@ public:
         if (usexml) { keypoint_learning.loadConfigFile(path_ + configurationFile_); } 
                
 
-        for (int i = 1; i < maxTrainImageNumber; i++) 
+        for (int i = 1; i <= maxTrainImageNumber_; i++) 
         {
-            ROS_INFO("i ist: %i", i);  
+            ROS_INFO("Image Number: %i", i);  
             objectNumberPath = objectPath + std::to_string(i);  
             vpImageIo::read(Icolor_, objectNumberPath + "_color" + ext); 
  
@@ -196,15 +231,16 @@ public:
             learnCube(Icolor_, tracker, keypoint_learning, i);               
             
         
-            if (i < maxTrainImageNumber-1) {
-                vpDisplay::displayText(Icolor_, 30, 10, toString(i+1) + "/" + toString(maxTrainImageNumber) + "done. Click to learn next pose of the object.", vpColor::red);
+            if (i < maxTrainImageNumber_) {
+                vpDisplay::displayText(Icolor_, 30, 10, toString(i) + "/" + toString(maxTrainImageNumber_) + "done. Click to learn next pose of the object.", vpColor::red);
             } else {
-                 vpDisplay::displayText(Icolor_, 30, 10, toString(i+1) + "/" + toString(maxTrainImageNumber) + "done. Click to finish learning.", vpColor::red);
+                 vpDisplay::displayText(Icolor_, 30, 10, toString(i) + "/" + toString(maxTrainImageNumber_) + "done. Click to finish learning.", vpColor::red);
             } 
             vpDisplay::flush(Icolor_);
             vpDisplay::getClick(Icolor_, true);        
         }       
         keypoint_learning.saveLearningData(objectNumberPath + "_learning_data" + learningExtension_, binMode_, false);   // (filename, binaryMode, saveTrainImages)
+        saveNumberKeypoints("NumberKeypoints.txt", saveKeypointsGlobal_);
     }
 
 };
@@ -214,7 +250,7 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "learnObject_learnKeypoints"); 
     Detection detection("LearnObject"); 
 
-    ROS_INFO("Detection node to learn object %s started", detection.object_name.c_str());
+    ROS_INFO("Detection node to learn object %s started", detection.objectName_.c_str());
      
     detection.createLearnImages();
 
