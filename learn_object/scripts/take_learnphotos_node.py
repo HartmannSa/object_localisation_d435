@@ -95,7 +95,7 @@ if __name__=="__main__":
                 saved = save_srv(path_object, object_name + str(elem) + '_color.jpg')
             except rospy.ServiceException as e:
                 print("Service call save camera frame failed: %s"%e)
-            rospy.sleep(1.0)
+            rospy.sleep(0.5)
     
     print("Done Taking Photos")
     rospy.spin()

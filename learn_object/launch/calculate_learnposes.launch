@@ -17,9 +17,9 @@
         <!-- <param name="source_frame"          value="base_link"/> -->
         <param name="source_frame"          value="cam_footprint"/>
         <param name="target_frame"          value="map"/>
-        <param name="number_of_images"      value="3"/>
+        <param name="number_of_images"      value="12"/>
         <param name="angle_range"           value="180"  />
-        <param name="distance"              value="1"/>
+        <param name="distance"              value="1.38"/>
     </node> 
 
     <node name="CalcHelper_broadcaster2" type="static_tf_yaml_parser2.py"  pkg="helper">

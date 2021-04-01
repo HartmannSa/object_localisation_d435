@@ -1,6 +1,6 @@
 <launch>   
     <arg name="filename_poses"  default="base_learn_poses.yaml"/>
-    <arg name="object"          default="Goesser_27c_"/>
+    <arg name="object"          default="Goesser_"/>
 
     <include file="$(find camera_d435)/launch/camera_stream.launch"/>     
 

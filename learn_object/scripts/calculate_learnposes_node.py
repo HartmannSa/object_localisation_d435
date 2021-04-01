@@ -132,8 +132,8 @@ if __name__=="__main__":
         # Calculate Base Pose
         base_pose = PoseStamped()
         base_pose.header.frame_id = poses_cam[i+1].header.frame_id
-        base_pose.pose.position.x = poses_cam[i+1].pose.position.x + 0.2*math.sin(i*angle)
-        base_pose.pose.position.y = poses_cam[i+1].pose.position.y + 0.2*math.cos(i*angle)
+        base_pose.pose.position.x = poses_cam[i+1].pose.position.x - 0.2*math.sin(i*angle)
+        base_pose.pose.position.y = poses_cam[i+1].pose.position.y - 0.2*math.cos(i*angle)
         base_pose.pose.position.z = 0
         base_pose.pose.orientation.x = poses_cam[i+1].pose.orientation.x
         base_pose.pose.orientation.y = poses_cam[i+1].pose.orientation.y
