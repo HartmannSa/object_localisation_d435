@@ -1,4 +1,0 @@
-Test_
-image number; number of keypoints
-1; 459
-2; 557

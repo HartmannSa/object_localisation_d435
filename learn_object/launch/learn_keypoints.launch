@@ -9,6 +9,6 @@
     <param name="path"                      type="str"    value="$(find learn_object)/model/"/> 
     <param name="binMode"                   type="bool"   value="true" /> 
     <param name="saveKeypointsGlobal"       type="bool"   value="true" />  
-    <param name="maxTrainImageNumber"       type="int"    value="2" />
+    <param name="TrainImageNumber"          type="int"    value="12" />
   </node>
 </launch>

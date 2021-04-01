@@ -31,7 +31,6 @@ std::string toString(const T &value) {
     return os.str();
 }
 
-
 class Detection
 {
 protected:
@@ -40,20 +39,18 @@ protected:
     std::string pathModel_;  
     std::string feature_;
     std::string learningExtension_;
+    std::string detectorName_;
+    std::string extractorName_;
+    std::string matcherName_;  
+    std::string configurationFile_;
     int maxTrainImageNumber_;
     bool binMode_;
     bool saveKeypointsGlobal_;
     std::vector<int> numberKeypoints_;
 
-    // Camera Settings
     vpCameraParameters cam_color_; 
     vpImage<vpRGBa> Icolor_; 
-
-    std::string detectorName_;
-    std::string extractorName_;
-    std::string matcherName_;  
-    std::string configurationFile_; 
-    
+   
 public:
     std::string objectName_;     
 
@@ -67,11 +64,10 @@ public:
         nh.param<bool>("saveKeypointsGlobal", saveKeypointsGlobal_, false);                                                  // If true: learningData is saved as .bin, otherwise it is saved as .xml
         nh.param<bool>("binMode", binMode_, true);                                                  // If true: learningData is saved as .bin, otherwise it is saved as .xml
         learningExtension_ = binMode_ ? ".bin" : ".xml";              
-        nh.param<int>("maxTrainImageNumber", maxTrainImageNumber_, 3);                               // number of image(s) to save
+        nh.param<int>("TrainImageNumber", maxTrainImageNumber_, 3);                               // number of image(s) to save
     }
 
     ~Detection(void) {}      
-
 
     void setDetectionSettings(std::string name, vpKeyPoint& keypoint)
     {
@@ -158,7 +154,8 @@ public:
  
     } 
 
-    void createLearnImages(){
+    void createLearnImages()
+    {
         // Camera Parameter
         Icolor_.resize(480, 640);
         double u0 = Icolor_.getWidth()  / 2.;   // 319.999634 principal point

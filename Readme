@@ -89,12 +89,58 @@ goal:
         y: 0.0
         z: -0.696273668817634
         w: 0.7177764123396868"
+BESSER
+rostopic echo /move_base_simple/goal
+-> Message kopieren um sie dann für die folgenden Messreihen zu nutzen
+header: 
+  seq: 20
+  stamp: 
+    secs: 1617298953
+    nsecs: 298528457
+  frame_id: "map"
+pose: 
+  position: 
+    x: 7.52769088745
+    y: 21.3555850983
+    z: 0.0
+  orientation: 
+    x: 0.0
+    y: 0.0
+    z: -0.000838605297691
+    w: 0.999999648371
+---
 
+roslaunch helper calculate_poses.launch target:="Goesser_35_98_" radius:="1.15"
+roslaunch helper publish_poses.launch filename:="poses_circular.yaml" topic:="/cam" target:="Goesser_35_98_"
+roslaunch helper publish_poses.launch filename:="poses_circular_base.yaml" target:="Goesser_35_98_"
+
+rostopic pub /move_base_simple/goal geometry_msgs/PoseStamped "header:
+  seq: 0
+  stamp:
+    secs: 0
+    nsecs: 0
+  frame_id: "map"
+pose: 
+  position: 
+    x: 7.52769088745
+    y: 21.3555850983
+    z: 0.0
+  orientation: 
+    x: 0.0
+    y: 0.0
+    z: -0.000838605297691
+    w: 0.999999648371"
+
+roslaunch learn_object take_learnphotos.launch object:="Goesser_35_98_"
 
 3.)
 roslaunch learn_object take_learnphotos.launch
 
 Automatische Navigation des Robos zu den berechneten Posen und Fotos aufnehmen
+
+roslaunch learn_object take_learnphotos.launch filename_poses:="poses_circular_base.yaml" path:="/home/rosmatch/catkin_ws_D435/src/object_localisation_d435/detection_localisation/poses"
+roslaunch helper publish_poses.launch filename:="poses_circular_base.yaml" 
+
 
 4)
 
@@ -105,6 +151,48 @@ Manually initialise the photos by clicking the 4 corners of the model
 roslaunch helper publish_poses.launch filename:="poses_circular.yaml" topic:="/cam"
 roslaunch helper publish_poses.launch filename:="poses_circular_base.yaml" 
 roslaunch helper calculate_poses.launch 
+
+rostopic echo /targetMarker -n 1
+header: 
+  seq: 261
+  stamp: 
+    secs: 0
+    nsecs:         0
+  frame_id: "map"
+ns: ''
+id: 0
+type: 1
+action: 0
+pose: 
+  position: 
+    x: 7.540143013
+    y: 21.3822193146
+    z: 0.15
+  orientation: 
+    x: 0.0
+    y: 0.0
+    z: 0.00654810830359
+    w: 0.999978560909
+scale: 
+  x: 0.4
+  y: 0.3
+  z: 0.3
+color: 
+  r: 0.0
+  g: 0.0
+  b: 0.0
+  a: 0.5
+lifetime: 
+  secs: 0
+  nsecs:         0
+frame_locked: False
+points: []
+colors: []
+text: ''
+mesh_resource: ''
+mesh_use_embedded_materials: False
+---
+
 
 
 
