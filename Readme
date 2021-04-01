@@ -100,6 +100,14 @@ Automatische Navigation des Robos zu den berechneten Posen und Fotos aufnehmen
 
 Manually initialise the photos by clicking the 4 corners of the model
 
+5)
+# calculate linear poses
+roslaunch helper publish_poses.launch filename:="poses_circular.yaml" topic:="/cam"
+roslaunch helper publish_poses.launch filename:="poses_circular_base.yaml" 
+roslaunch helper calculate_poses.launch 
+
+
+
 
 *****************************************************************************************+
 ROSBAG 

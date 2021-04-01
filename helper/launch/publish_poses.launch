@@ -1,0 +1,13 @@
+<launch>   
+    <arg name="filename"    default="poses_linear.yaml"/>
+    <arg name="path"        default="$(find detection_localisation)/poses"/>
+    <arg name="topic"   default="/target"/>
+
+    <node name="$(anon poses_publisher)" type="publish_poses_node.py" pkg="helper" output="screen">
+        <param name="filename"         value="$(arg path)/$(arg filename)"/>
+        <param name="topic"            value="$(arg topic)"/>
+    </node> 
+
+
+</launch>
+
