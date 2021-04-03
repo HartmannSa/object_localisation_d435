@@ -35,8 +35,8 @@ class Detection
 {
 protected:
     ros::NodeHandle n_;    
-    std::string path_; 
-    std::string pathModel_;  
+    std::string pathModel_; 
+    std::string modelFileName_; 
     std::string feature_;
     std::string learningExtension_;
     std::string detectorName_;
@@ -57,10 +57,10 @@ public:
     Detection(std::string name)
     {        
         ros::NodeHandle nh("~");
-        nh.param<std::string>("object_name", objectName_, "Teabox" );                               // name of object to learn
+        nh.param<std::string>("model_filename", modelFileName_, "Goesser" );
+        nh.param<std::string>("object_name", objectName_, "Goesser_27_57_" );                               // name of object to learn
         nh.param<std::string>("feature", feature_, "ORB");                                           // select feature for the keypoints (e.g. "SURF", "SIFT")
-        nh.param<std::string>("path", pathModel_, "");                                                   // path to mir_vision (where model/ and config/ are saved)
-        path_ = pathModel_ + objectName_ + "/";
+        nh.param<std::string>("path", pathModel_, "");                                                   // path to package, e.g learn_object/model/
         nh.param<bool>("saveKeypointsGlobal", saveKeypointsGlobal_, false);                                                  // If true: learningData is saved as .bin, otherwise it is saved as .xml
         nh.param<bool>("binMode", binMode_, true);                                                  // If true: learningData is saved as .bin, otherwise it is saved as .xml
         learningExtension_ = binMode_ ? ".bin" : ".xml";              
@@ -124,7 +124,7 @@ public:
     
     void saveNumberKeypoints(std::string filename, bool saveGlobal = false){
         std::ofstream file;        
-        file.open((path_ + filename).c_str(), std::ifstream::out); 
+        file.open((pathModel_ + objectName_ + "/" + filename).c_str(), std::ifstream::out); 
         if (file.is_open())
         {
            file << objectName_ << std::endl; 
@@ -134,7 +134,7 @@ public:
                file << i << "; " << numberKeypoints_[i-1] << std::endl;
            }
            file.close();
-        } else ROS_INFO("Unable to open file %s", (path_ + filename).c_str() ); 
+        } else ROS_INFO("Unable to open file %s", (pathModel_ + objectName_ + "/" + filename).c_str() ); 
 
         if (saveGlobal) {
             std::ofstream f;
@@ -174,16 +174,14 @@ public:
         vpDisplayOpenCV d_c;
         d_c.init(Icolor_,100, 50, "Color Stream"); 
         
-        std::string objectPath = path_ + objectName_;
-        std::string objectNumberPath;
-        std::string ext = ".jpg";
+
 
         // *** Tracker and Keypoint Settings
         vpMbGenericTracker tracker(vpMbGenericTracker::EDGE_TRACKER);
         vpKeyPoint keypoint_learning;                  
         bool usexml = false;
-        if (vpIoTools::checkFilename(objectPath + ".xml")) {
-            tracker.loadConfigFile(objectPath + ".xml");
+        if (vpIoTools::checkFilename(pathModel_ + objectName_ + "/" + modelFileName_ + ".xml")) {
+            tracker.loadConfigFile(pathModel_ + objectName_ + "/" + modelFileName_ + ".xml");
             tracker.getCameraParameters(cam_color_);
             usexml = true;
         }
@@ -208,23 +206,23 @@ public:
         }
         tracker.setOgreVisibilityTest(false);
         tracker.setDisplayFeatures(true);
-        if (vpIoTools::checkFilename(objectPath + ".cao"))
-            tracker.loadModel(objectPath + ".cao");
-        else if (vpIoTools::checkFilename(objectPath + ".wrl"))
-            tracker.loadModel(objectPath + ".wrl"); 
+        if (vpIoTools::checkFilename(pathModel_ + objectName_ + "/" + modelFileName_ + ".cao"))
+            tracker.loadModel(pathModel_ + objectName_ + "/" + modelFileName_ + ".cao");
+        else if (vpIoTools::checkFilename(pathModel_ + objectName_ + "/" + modelFileName_ + ".wrl"))
+            tracker.loadModel(pathModel_ + objectName_ + "/" + modelFileName_ + ".wrl"); 
 
         // *** Keypoint settings
         setDetectionSettings(feature_, keypoint_learning);
-        if (usexml) { keypoint_learning.loadConfigFile(path_ + configurationFile_); } 
+        if (usexml) { keypoint_learning.loadConfigFile(pathModel_ + objectName_ + "/" + configurationFile_); } 
                
-
-        for (int i = 1; i <= maxTrainImageNumber_; i++) 
-        {
+        std::string ext = ".jpg";
+        int i = 1;
+        while (ros::ok() && i <= maxTrainImageNumber_) 
+        {             
             ROS_INFO("Image Number: %i", i);  
-            objectNumberPath = objectPath + std::to_string(i);  
-            vpImageIo::read(Icolor_, objectNumberPath + "_color" + ext); 
+            vpImageIo::read(Icolor_, pathModel_ + objectName_ + "/" + objectName_ + std::to_string(i) + "_color" + ext); 
  
-            tracker.initClick(Icolor_, objectNumberPath + ".init", true);
+            tracker.initClick(Icolor_, pathModel_ + objectName_ + "/" + modelFileName_ + std::to_string(i) + ".init", true);
             learnCube(Icolor_, tracker, keypoint_learning, i);               
             
         
@@ -234,9 +232,10 @@ public:
                  vpDisplay::displayText(Icolor_, 30, 10, toString(i) + "/" + toString(maxTrainImageNumber_) + "done. Click to finish learning.", vpColor::red);
             } 
             vpDisplay::flush(Icolor_);
-            vpDisplay::getClick(Icolor_, true);        
+            vpDisplay::getClick(Icolor_, true); 
+            i++;       
         }       
-        keypoint_learning.saveLearningData(objectNumberPath + "_learning_data" + learningExtension_, binMode_, false);   // (filename, binaryMode, saveTrainImages)
+        keypoint_learning.saveLearningData(pathModel_ + objectName_ + "/" + objectName_ + std::to_string(maxTrainImageNumber_) + "_learning_data" + learningExtension_, binMode_, false);   // (filename, binaryMode, saveTrainImages)
         saveNumberKeypoints("NumberKeypoints.txt", saveKeypointsGlobal_);
     }
 
@@ -248,7 +247,6 @@ int main(int argc, char** argv)
     Detection detection("LearnObject"); 
 
     ROS_INFO("Detection node to learn object %s started", detection.objectName_.c_str());
-     
     detection.createLearnImages();
 
     ros::shutdown();
