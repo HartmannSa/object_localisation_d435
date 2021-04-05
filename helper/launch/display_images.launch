@@ -1,0 +1,14 @@
+<?xml version="1.0" ?>
+<launch>
+  <arg name="object"   default="Goesser_35_98_" />
+  <!-- <arg name="model"    default="$(arg object)" /> -->
+  <arg name="model"    default="Goesser" />
+
+  <!--Start Learning-->
+  <node pkg="helper" type="displayImages" name="display_images" output="screen" >
+    <param name="model_filename"            type="str"    value="$(arg model)" />
+    <param name="object_name"               type="str"    value="$(arg object)" />
+    <param name="path"                      type="str"    value="$(find learn_object)/model/"/> 
+    <param name="numberOfImages"            type="int"    value="12" />
+  </node>
+</launch>

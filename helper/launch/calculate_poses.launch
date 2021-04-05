@@ -6,10 +6,10 @@
     <node name="pose_calculator" type="calculate_poses_node.py" pkg="helper" output="screen">
         <param name="file_path"             value="$(arg path)"/>
         <param name="number_of_poses"       value="12"/>
-        <param name="linear"                value="false"/>
+        <param name="linear"                value="true"/>
         <param name="stepOffset"            value="0.5"/>
         <param name="stepDistance"          value="0.2"/>
-        <param name="circular"              value="true"/>
+        <param name="circular"              value="false"/>
         <param name="radius"                value="$(arg radius)"/>
         <param name="angle_range"           value="180"/>       
 

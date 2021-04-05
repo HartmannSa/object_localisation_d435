@@ -95,8 +95,10 @@ include_directories(
 ## Declare a C++ executable
 add_executable( detection_client ${sample_dir}ActionClient.cpp )
 add_executable( detection_server ${sample_dir}ActionServer.cpp )
+add_executable( frame_detection ${sample_dir}FrameDetection.cpp )
 add_dependencies(detection_client ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(detection_server ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(frame_detection ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -113,6 +115,7 @@ add_dependencies(detection_server ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_E
 # )
 target_link_libraries(detection_client ${catkin_LIBRARIES} ${VISP_LIBRARIES})
 target_link_libraries(detection_server ${catkin_LIBRARIES} ${VISP_LIBRARIES})
+target_link_libraries(frame_detection ${catkin_LIBRARIES} ${VISP_LIBRARIES})
 
 # copy the needed Data/model files
 # visp_copy_dir(detection.cpp "${CMAKE_CURRENT_SOURCE_DIR}" model)

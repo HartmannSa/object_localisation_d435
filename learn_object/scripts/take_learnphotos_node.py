@@ -61,6 +61,7 @@ if __name__=="__main__":
     filename_poses    = rospy.get_param('~filename_poses', '')
     path_object       = rospy.get_param('~path_object', '')
     object_name       = rospy.get_param('~object_name', 'object')
+    numberImages      = rospy.get_param('~numberImages', 20)
     poses=dict()
     
     # Load Poses from .yaml
@@ -91,8 +92,15 @@ if __name__=="__main__":
             # Take Photo
             rospy.wait_for_service('camera_saveFrame')
             try:
-                save_srv = rospy.ServiceProxy('camera_saveFrame', saveFrame)
-                saved = save_srv(path_object, object_name + str(elem) + '_color.jpg')
+                if numberImages == 1:
+                    save_srv = rospy.ServiceProxy('camera_saveFrame', saveFrame)
+                    saved = save_srv(path_object, object_name + str(elem) + '_color.jpg')
+                else:
+                    for nr in range(1, numberImages):
+                        save_srv = rospy.ServiceProxy('camera_saveFrame', saveFrame)
+                        saved = save_srv(path_object, object_name + "Pose" + str(elem) + "_nr" + str(nr) + '.jpg')
+                        rospy.sleep(0.1)
+                    
             except rospy.ServiceException as e:
                 print("Service call save camera frame failed: %s"%e)
             rospy.sleep(0.5)

@@ -2,14 +2,9 @@
 import rospy
 import os
 import errno
-# import actionlib
-# from learn_object.msg import cameraAction, cameraResult
-
-# import actionlib_tutorials.msg
 import pyrealsense2 as rs
 import numpy as np
 import cv2
-# from learn_object.msg import saveFrame
 from learn_object.srv import saveFrame,saveFrameResponse
 
 class Camera:   
