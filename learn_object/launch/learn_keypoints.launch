@@ -12,5 +12,7 @@
     <param name="binMode"                   type="bool"   value="true" /> 
     <param name="saveKeypointsGlobal"       type="bool"   value="true" />  
     <param name="TrainImageNumber"          type="int"    value="12" />
+    <param name="alphaAppear"               type="double"    value="98" />
+    <param name="alphaDisappear"            type="double"    value="98" />
   </node>
 </launch>

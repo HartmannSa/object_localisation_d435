@@ -24,6 +24,11 @@
 #include <string>
 #include <fstream>
 
+#include <sstream>
+#include <sys/stat.h>
+#include <experimental/filesystem>
+// #include <filesystem>
+
 template<class T>
 std::string toString(const T &value) {
     std::ostringstream os;
@@ -49,7 +54,9 @@ protected:
     std::vector<int> numberKeypoints_;
 
     vpCameraParameters cam_color_; 
-    vpImage<vpRGBa> Icolor_; 
+    vpImage<vpRGBa> Icolor_, Ikeypoints_; 
+
+    double alphaAp_, alphaDi_;
    
 public:
     std::string objectName_;     
@@ -65,6 +72,8 @@ public:
         nh.param<bool>("binMode", binMode_, true);                                                  // If true: learningData is saved as .bin, otherwise it is saved as .xml
         learningExtension_ = binMode_ ? ".bin" : ".xml";              
         nh.param<int>("TrainImageNumber", maxTrainImageNumber_, 3);                               // number of image(s) to save
+        nh.param<double>("alphaAppear", alphaAp_, 70.0);
+        nh.param<double>("alphaDisappear", alphaDi_, 80.0);
     }
 
     ~Detection(void) {}      
@@ -116,10 +125,11 @@ public:
         vpDisplay::display(Icolor_);
         for (std::vector<cv::KeyPoint>::const_iterator it = trainKeyPoints.begin(); it != trainKeyPoints.end(); ++it) {
             vpDisplay::displayCross(Icolor_, (int)it->pt.y, (int)it->pt.x, 4, vpColor::red);
-        }                tracker.track(Icolor_);
+        }                
+        tracker.track(Icolor_);
         tracker.getPose(cMo);
         tracker.display(Icolor_, cMo, cam_color_, vpColor::red);
-        vpDisplay::displayText(Icolor_, 10, 10, "Learning step: keypoints are detected on visible teabox faces", vpColor::red);
+        // vpDisplay::displayText(Icolor_, 10, 10, "Learning step: keypoints are detected on visible teabox faces", vpColor::red);
     }
     
     void saveNumberKeypoints(std::string filename, bool saveGlobal = false){
@@ -198,8 +208,8 @@ public:
             tracker.setMovingEdge(me);
             // cam.initPersProjWithoutDistortion(839, 839, 325, 243);
             tracker.setCameraParameters(cam_color_);
-            tracker.setAngleAppear(vpMath::rad(70));
-            tracker.setAngleDisappear(vpMath::rad(80));
+            tracker.setAngleAppear(vpMath::rad(alphaAp_));
+            tracker.setAngleDisappear(vpMath::rad(alphaDi_));
             tracker.setNearClippingDistance(0.1);
             tracker.setFarClippingDistance(100.0);
             tracker.setClipping(tracker.getClipping() | vpMbtPolygon::FOV_CLIPPING);
@@ -214,6 +224,15 @@ public:
         // *** Keypoint settings
         setDetectionSettings(feature_, keypoint_learning);
         if (usexml) { keypoint_learning.loadConfigFile(pathModel_ + objectName_ + "/" + configurationFile_); } 
+
+        // Create keypoints folder for images with keypoints
+        // struct stat st;
+        // if(stat("pathModel_ + objectName_ + /keypoints/", &st) != 0)
+        // {
+        //     int status =  mkdir("pathModel_ + objectName_ + /keypoints", 777);
+        //     ROS_INFO("created folder: %d", status);
+        //     std::experimental::filesystem::create_directories("pathModel_ + objectName_ + /keypoints");
+        // }
                
         std::string ext = ".jpg";
         int i = 1;
@@ -226,12 +245,16 @@ public:
             learnCube(Icolor_, tracker, keypoint_learning, i);               
             
         
-            if (i < maxTrainImageNumber_) {
-                vpDisplay::displayText(Icolor_, 30, 10, toString(i) + "/" + toString(maxTrainImageNumber_) + "done. Click to learn next pose of the object.", vpColor::red);
-            } else {
-                 vpDisplay::displayText(Icolor_, 30, 10, toString(i) + "/" + toString(maxTrainImageNumber_) + "done. Click to finish learning.", vpColor::red);
-            } 
+            // if (i < maxTrainImageNumber_) {
+            //     vpDisplay::displayText(Icolor_, 30, 10, toString(i) + "/" + toString(maxTrainImageNumber_) + "done. Click to learn next pose of the object.", vpColor::red);
+            // } else {
+            //      vpDisplay::displayText(Icolor_, 30, 10, toString(i) + "/" + toString(maxTrainImageNumber_) + "done. Click to finish learning.", vpColor::red);
+            // } 
             vpDisplay::flush(Icolor_);
+            // save image with overlaid keypoints
+            vpDisplay::getImage(Icolor_, Ikeypoints_);
+            vpImageIo::write(Ikeypoints_, pathModel_ + objectName_ + "/keypoints/" + objectName_ + std::to_string(i) + "_color.jpg");
+
             vpDisplay::getClick(Icolor_, true); 
             i++;       
         }       
