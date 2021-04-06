@@ -64,24 +64,24 @@ catkin_python_setup()
 # )
 
 ## Generate services in the 'srv' folder
-add_service_files(
-  FILES
-  saveFrame.srv
-)
+# add_service_files(
+#   FILES
+#   saveFrame.srv
+# )
 
 ## Generate actions in the 'action' folder
-add_action_files(
-  DIRECTORY action
-  FILES
-    camera.action
-)
+# add_action_files(
+#   DIRECTORY action
+#   FILES
+#     camera.action
+# )
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages(
-  DEPENDENCIES
-  std_msgs
-  actionlib_msgs
-)
+# generate_messages(
+#   DEPENDENCIES
+#   std_msgs
+#   actionlib_msgs
+# )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -115,7 +115,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES learn_object
- CATKIN_DEPENDS message_runtime rospy actionlib_msgs
+#  CATKIN_DEPENDS message_runtime rospy actionlib_msgs
 #  DEPENDS system_lib
 )
 

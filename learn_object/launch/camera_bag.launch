@@ -1,5 +1,0 @@
-<launch>   
-    <node name="camera" type="camera_bag_node.py" pkg="learn_object" output="screen">
-    </node> 
-</launch>
-

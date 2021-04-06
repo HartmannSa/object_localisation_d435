@@ -13,7 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   geometry_msgs
-  message_generation
+  # message_generation
 )
 
 find_package(OpenCV REQUIRED)
@@ -72,11 +72,11 @@ find_package(OpenCV REQUIRED)
 # )
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages(
-  DEPENDENCIES
-  std_msgs
-  geometry_msgs
-)
+# generate_messages(
+#   DEPENDENCIES
+#   std_msgs
+#   geometry_msgs
+# )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -110,7 +110,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES helper
- CATKIN_DEPENDS roscpp rospy std_msgs message_runtime
+#  CATKIN_DEPENDS roscpp rospy std_msgs 
 #  DEPENDS system_lib
 )
 
@@ -156,6 +156,6 @@ add_executable( displayImages ${sample_dir}display_images.cpp )
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
-target_link_libraries(displayImages ${catkin_LIBRARIES} ${OpenCV_LIBS} ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(displayImages ${catkin_LIBRARIES} ${OpenCV_LIBS} ) #  ${OpenCV_INCLUDE_DIRS}
 # visp_copy_dir(displayImages "${CMAKE_CURRENT_SOURCE_DIR}" model)
 

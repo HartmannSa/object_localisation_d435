@@ -5,7 +5,7 @@ import errno
 import pyrealsense2 as rs
 import numpy as np
 import cv2
-from learn_object.srv import saveFrame,saveFrameResponse
+from camera_d435.srv import saveFrame,saveFrameResponse
 
 class Camera:   
     def __init__(self):
