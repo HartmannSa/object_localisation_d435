@@ -1,17 +1,21 @@
 <launch>
-    <arg name="target"    default="Goesser"/>
-    <arg name="path"      default="$(find learn_object)/model/$(arg target)/"/> 
-    <arg name="radius"    default="1.2"/>  
+    <arg name="target"      default="Goesser"/>
+    <arg name="path"        default="$(find learn_object)/model/$(arg target)/"/> 
+    <arg name="radius"      default="1.1"/>
+    <arg name="dx"          default="0.32"/> 
+    <arg name="dy"          default="0.21"/>   
 
     <node name="pose_calculator" type="calculate_poses_node.py" pkg="helper" output="screen">
         <param name="file_path"             value="$(arg path)"/>
         <param name="number_of_poses"       value="12"/>
-        <param name="linear"                value="true"/>
-        <param name="stepOffset"            value="0.5"/>
+        <param name="linear"                value="false"/>
+        <param name="stepOffset"            value="0.8"/>
         <param name="stepDistance"          value="0.2"/>
-        <param name="circular"              value="false"/>
+        <param name="circular"              value="true"/>
         <param name="radius"                value="$(arg radius)"/>
-        <param name="angle_range"           value="180"/>       
+        <param name="angle_range"           value="180"/>  
+        <param name="dx"                    value="$(arg dx)"/> 
+        <param name="dy"                    value="$(arg dy)"/>      
 
     </node> 
 

@@ -5,10 +5,9 @@ import os
 import errno
 from geometry_msgs.msg import PoseStamped
 import actionlib
-from learn_object.msg import cameraAction, cameraGoal
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 # from learn_object.msg import saveFrame
-from learn_object.srv import saveFrame,saveFrameResponse
+from camera_d435.srv import saveFrame,saveFrameResponse
 
 
 def dictToPose(poses):
@@ -98,7 +97,7 @@ if __name__=="__main__":
                 else:
                     for nr in range(1, numberImages):
                         save_srv = rospy.ServiceProxy('camera_saveFrame', saveFrame)
-                        saved = save_srv(path_object, object_name + "Pose" + str(elem) + "_nr" + str(nr) + '.jpg')
+                        saved = save_srv(path_object + "linear/", object_name + "Pose" + str(elem) + "_nr" + str(nr) + '.jpg')
                         rospy.sleep(0.1)
                     
             except rospy.ServiceException as e:

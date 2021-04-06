@@ -1,0 +1,8 @@
+target_frame: miranda/mir/ref_kamera
+source_frame: miranda/mir/base_link
+x: 0.0
+y: 0.0
+z: 0.0
+roll: 3.1415
+pitch: -1.5708
+yaw: 0.0

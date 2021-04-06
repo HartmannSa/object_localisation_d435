@@ -1,0 +1,12 @@
+<launch>   
+
+    <!-- Add a Transformation from panda to cam for closed tf tree -->
+    <node name="miranda_cam_broadcaster" type="static_tf_yaml_parser2.py"  pkg="helper">
+        <rosparam command="load" file="$(find camera_d435)/description/config/helper_miranda_cam.yaml"/>
+    </node> 
+
+    <node name="ref_cam_broadcaster" type="static_tf_yaml_parser2.py"  pkg="helper">
+        <rosparam command="load" file="$(find camera_d435)/description/config/helper_cam_ref.yaml"/>
+    </node> 
+      
+</launch>

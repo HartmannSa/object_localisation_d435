@@ -1,16 +1,17 @@
 <launch>  
     <arg name="object"          default="Goesser"/>
-    <arg name="path"            default="$(find learn_object)/model/$(arg object)"/>
-    <!-- <arg name="filename_poses"  default="poses_circular_base.yaml"/> -->
-    <arg name="filename_poses"  default="poses_linear.yaml"/>
+    <arg name="path"            default="$(find learn_object)/model/$(arg object)/"/>
+    <arg name="filename_poses"  default="poses_circular_base.yaml"/>
+    <arg name="numberImages"    default="1"/>
+    <!-- <arg name="filename_poses"  default="poses_linear.yaml"/> -->
 
     <include file="$(find camera_d435)/launch/camera_stream.launch"/>     
 
     <node name="learnphotos_taker" type="take_learnphotos_node.py" pkg="learn_object" output="screen">
-        <param name="filename_poses"    value="$(arg path)/$(arg filename_poses)"/>
-        <param name="path_object"       value="$(find learn_object)/model/$(arg object)/linear/"/>
+        <param name="filename_poses"    value="$(arg path)$(arg filename_poses)"/>
+        <param name="path_object"       value="$(arg path)"/>
         <param name="object_name"       value="$(arg object)"/>
-        <param name="numberImages"      value="20"/>
+        <param name="numberImages"      value="$(arg numberImages)"/>
         
     </node> 
 </launch>

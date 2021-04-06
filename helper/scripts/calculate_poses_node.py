@@ -73,6 +73,8 @@ class PoseCalculator:
         self.__circular         = rospy.get_param("~circular", True)        
         self.__radius           = rospy.get_param("~radius", '1.0')
         self.__angleRange       = rospy.get_param('~angle_range','180')
+        self.__dx               = rospy.get_param('~dx','0.3')
+        self.__dy               = rospy.get_param('~dy','0.2')
         self.__pose_sub         = rospy.Subscriber("/move_base_simple/goal", PoseStamped, self.__calcPoints__)
         self.__calc_pub         = rospy.Publisher("/calculation_done", String, queue_size=2)   
     
@@ -95,12 +97,10 @@ class PoseCalculator:
         transform_mapTarget.transform.rotation.z = msg.pose.orientation.z
         transform_mapTarget.transform.rotation.w = msg.pose.orientation.w
 
-        dx = 0.3
-        dy = 0.2
         off_point = geometry_msgs.msg.PointStamped()
         off_point.header.frame_id = "targetFrameI"
-        off_point.point.x = self.__radius + dx
-        off_point.point.y = dy
+        off_point.point.x = self.__radius + self.__dx
+        off_point.point.y = self.__dy
         off_point.point.z = 0
 
         transform_targetI = geometry_msgs.msg.TransformStamped()

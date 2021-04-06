@@ -1,0 +1,8 @@
+target_frame: miranda/panda/kamera
+source_frame: miranda/panda/panda_EE
+x: 0.03
+y: 0.0
+z: -0.06
+yaw: 0.0
+roll: 0.0
+pitch: 0.0
