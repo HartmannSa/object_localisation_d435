@@ -1,6 +1,6 @@
 <launch>   
-    <!-- <arg name="filename"    default="poses_linear.yaml"/> -->
-    <arg name="filename"    default="poses_circular.yaml"/>
+    <arg name="filename"    default="poses_linear.yaml"/>
+    <!-- <arg name="filename"    default="poses_circular.yaml"/> -->
     <arg name="target"      default="Goesser"/>
     <arg name="path"        default="$(find learn_object)/model/$(arg target)"/>
     <arg name="topic"       default="/target"/>

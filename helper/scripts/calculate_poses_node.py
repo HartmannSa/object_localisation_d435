@@ -156,6 +156,7 @@ class PoseCalculator:
         rospy.loginfo("Saved circular calculated poses")
         self.__calc_pub.publish("Done circular calculation")
 
+
     def __calcPointsLinear__(self, msg):
         poses = dict()
         pose_i = PoseStamped()
@@ -172,7 +173,7 @@ class PoseCalculator:
         transform_mapTarget.transform.rotation.w = msg.pose.orientation.w
 
         pose_i.header.frame_id = "targetFrame"
-        pose_i.pose.position.y = 0
+        # pose_i.pose.position.y = 0
         pose_i.pose.position.z = 0
         pose_i.pose.orientation.x = 0
         pose_i.pose.orientation.y = 0
@@ -180,7 +181,8 @@ class PoseCalculator:
         pose_i.pose.orientation.w = 1.0
 
         for i in range(1, self.__numberPoses+1):
-            pose_i.pose.position.x = -self.__stepOffset - i*self.__stepDistance
+            pose_i.pose.position.x = -self.__stepOffset - i*self.__stepDistance - self.__dx
+            pose_i.pose.position.y = -self.__dy
             pose_i_transformed = tf2_geometry_msgs.do_transform_pose(pose_i, transform_mapTarget)
             poses[i]=pose_i_transformed
 
