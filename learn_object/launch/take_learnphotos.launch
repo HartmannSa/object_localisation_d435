@@ -2,6 +2,7 @@
     <arg name="object"          default="Goesser"/>
     <arg name="path"            default="$(find learn_object)/model/$(arg object)/"/>
     <arg name="filename_poses"  default="poses_circular_base.yaml"/>
+    <arg name="folderSave"      default="linear/"/>
     <arg name="numberImages"    default="1"/>
     <!-- <arg name="filename_poses"  default="poses_linear.yaml"/> -->
 
@@ -12,7 +13,7 @@
         <param name="path_object"       value="$(arg path)"/>
         <param name="object_name"       value="$(arg object)"/>
         <param name="numberImages"      value="$(arg numberImages)"/>
-        
+        <param name="folderSave"        value="$(arg folderSave)"/>        
     </node> 
 </launch>
 

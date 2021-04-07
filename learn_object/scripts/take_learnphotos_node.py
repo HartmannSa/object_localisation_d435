@@ -61,6 +61,7 @@ if __name__=="__main__":
     path_object       = rospy.get_param('~path_object', '')
     object_name       = rospy.get_param('~object_name', 'object')
     numberImages      = rospy.get_param('~numberImages', 20)
+    folderSave        = rospy.get_param('~folderSave', "linear/")
     poses=dict()
     
     # Load Poses from .yaml
@@ -95,9 +96,9 @@ if __name__=="__main__":
                     save_srv = rospy.ServiceProxy('camera_saveFrame', saveFrame)
                     saved = save_srv(path_object, object_name + str(elem) + '_color.jpg')
                 else:
-                    for nr in range(1, numberImages):
+                    for nr in range(1, numberImages+1):
                         save_srv = rospy.ServiceProxy('camera_saveFrame', saveFrame)
-                        saved = save_srv(path_object + "linear/", object_name + "Pose" + str(elem) + "_nr" + str(nr) + '.jpg')
+                        saved = save_srv(path_object + folderSave, object_name + "Pose" + str(elem) + "_nr" + str(nr) + '.jpg')
                         rospy.sleep(0.1)
                     
             except rospy.ServiceException as e:

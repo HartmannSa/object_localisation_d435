@@ -193,9 +193,15 @@ mesh_resource: ''
 mesh_use_embedded_materials: False
 ---
 
+7)
+Check  how Keypoints change ober x images from one pose:
+a) take photos
+roslaunch learn_object take_learnphotos.launch object:="Goesser_35_63_" folderSave:="static/" numberImages:="20" 
+b) learn keypoints
+roslaunch learn_object learn_keypoints.launch model:="Goesser" object:="Goesser_35_63_"
 
-
-
+8) display Image Stack
+roslaunch helper display_images.launch 
 
 *****************************************************************************************+
 ROSBAG 
