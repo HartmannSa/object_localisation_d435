@@ -274,8 +274,8 @@ public:
                         tracker.setMovingEdge(me);
                         // cam.initPersProjWithoutDistortion(839, 839, 325, 243);
                         tracker.setCameraParameters(camColor_);
-                        tracker.setAngleAppear(vpMath::rad(70));
-                        tracker.setAngleDisappear(vpMath::rad(80));
+                        tracker.setAngleAppear(vpMath::rad(98));
+                        tracker.setAngleDisappear(vpMath::rad(98));
                         tracker.setNearClippingDistance(0.1);
                         tracker.setFarClippingDistance(100.0);
                         tracker.setClipping(tracker.getClipping() | vpMbtPolygon::FOV_CLIPPING);
@@ -316,20 +316,28 @@ public:
                 {                                        
                     double error, elapsedTime;
                     unsigned int matches;
+                    vpHomogeneousMatrix H;
 
                     getFrameFile();
 
-                    keypoint.matchPoint(imgColor_, camColor_, cMo_, error, elapsedTime);
+                    keypoint.matchPoint(imgColor_, camColor_, H, error, elapsedTime);
                     matches = keypoint.getMatchedPointNumber();                                           
-                    tracker.setPose(imgColor_, cMo_);
+                    tracker.setPose(imgColor_, H);
 
+                    // ROS_INFO("Pose: %i; nr: %i", pose_, nr_);
                     if (nr_ == 1) {
                         cMoVec_.clear();
+                        pxVec_.clear();
+                        pyVec_.clear();
+                        pzVec_.clear();
+                        rotxVec_.clear();
+                        rotyVec_.clear();
+                        rotzVec_.clear();
                         matchesVec_.clear();
                         matchesStat_.clear();
                     }
 
-                    cMoVec_.push_back(cMo_);
+                    cMoVec_.push_back(H);
                     matchesVec_.push_back(matches);
 
                     if (nr_ >= nrThreshold_){
@@ -338,8 +346,8 @@ public:
                         saveData();
                     }
                     
-                    tracker.display(imgColor_, cMo_, camColor_, vpColor::red, 2);                   
-                    vpDisplay::displayFrame(imgColor_, cMo_, camColor_, 0.025, vpColor::none, 3);
+                    tracker.display(imgColor_, H, camColor_, vpColor::red, 2);                   
+                    vpDisplay::displayFrame(imgColor_, H, camColor_, 0.025, vpColor::none, 3);
                     vpDisplay::flush(imgColor_);                    
                     if (pose_ == nrPoses_ && nr_>= nrThreshold_) {STATUS = STATUS_EXIT;}
                     break; 
@@ -416,6 +424,7 @@ public:
             f.close();
         }
 
+
         f.open(filename.c_str(), std::ifstream::app);
         if (f.is_open())
         {
@@ -472,8 +481,7 @@ public:
     }
 
     void computeStatistics(std::vector<vpHomogeneousMatrix>& M)
-    {
-        
+    {       
 
         // ROS_INFO("cMoVec size is %zu", cMoVec_.size());
         for (int i = 0; i < M.size(); i++)

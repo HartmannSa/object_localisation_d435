@@ -203,6 +203,20 @@ roslaunch learn_object learn_keypoints.launch model:="Goesser" object:="Goesser_
 8) display Image Stack
 roslaunch helper display_images.launch 
 
+9) Analyse Detection
+roslaunch detection_localisation frameDetection.launch target:="Goesser_25_65_" posesNr:="48"
+roslaunch detection_localisation frameDetection.launch target:="Goesser_27_56_" posesNr:="15"
+roslaunch detection_localisation frameDetection.launch target:="Goesser_35_63_" posesNr:="20"
+roslaunch detection_localisation frameDetection.launch target:="Goesser_35_77_" posesNr:="23"
+roslaunch detection_localisation frameDetection.launch target:="Goesser_35_88_" posesNr:="28"
+roslaunch detection_localisation frameDetection.launch target:="Goesser_35_115_" posesNr:="36"
+roslaunch detection_localisation frameDetection.launch target:="Goesser_35_138_" posesNr:="43"
+roslaunch detection_localisation frameDetection.launch target:="Goesser_45_109_" posesNr:="22"
+roslaunch detection_localisation frameDetection.launch target:="Goesser_52_141_" posesNr:="20"
+roslaunch detection_localisation frameDetection.launch target:="Goesser_55_126_" posesNr:="16"
+roslaunch detection_localisation frameDetection.launch target:="Goesser_62_136_" posesNr:="16"
+
+
 *****************************************************************************************+
 ROSBAG 
 

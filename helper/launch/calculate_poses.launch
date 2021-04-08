@@ -7,13 +7,13 @@
 
     <node name="pose_calculator" type="calculate_poses_node.py" pkg="helper" output="screen">
         <param name="file_path"             value="$(arg path)"/>
-        <param name="number_of_poses"       value="12"/>
+        <param name="number_of_poses"       value="50"/>
         <param name="dx"                    value="$(arg dx)"/> 
         <param name="dy"                    value="$(arg dy)"/>
 
         <param name="linear"                value="true"/>
-        <param name="stepOffset"            value="0.5"/>
-        <param name="stepDistance"          value="0.15"/>
+        <param name="stepOffset"            value="0.4"/>
+        <param name="stepDistance"          value="0.1"/>
 
         <param name="circular"              value="false"/>
         <param name="radius"                value="$(arg radius)"/>

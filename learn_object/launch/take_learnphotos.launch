@@ -1,6 +1,6 @@
 <launch>  
-    <arg name="object"          default="Goesser"/>
-    <arg name="path"            default="$(find learn_object)/model/$(arg object)/"/>
+    <arg name="target"          default="Goesser"/>
+    <arg name="path"            default="$(find learn_object)/model/$(arg target)/"/>
     <arg name="folderSave"      default="linear/"/>
     <arg name="numberImages"    default="20"/>
     <!-- <arg name="filename_poses"  default="poses_circular_base.yaml"/> -->
@@ -11,7 +11,7 @@
     <node name="learnphotos_taker" type="take_learnphotos_node.py" pkg="learn_object" output="screen">
         <param name="filename_poses"    value="$(arg path)$(arg filename_poses)"/>
         <param name="path_object"       value="$(arg path)"/>
-        <param name="object_name"       value="$(arg object)"/>
+        <param name="object_name"       value="$(arg target)"/>
         <param name="numberImages"      value="$(arg numberImages)"/>
         <param name="folderSave"        value="$(arg folderSave)"/>        
     </node> 

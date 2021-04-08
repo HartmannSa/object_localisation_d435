@@ -1,6 +1,7 @@
 <?xml version="1.0" ?>
 <launch>
   <arg name="target"      default="Goesser_27_56_"/>
+  <arg name="posesNr"      default="50"/>
 
   <!--Start detection-->
   <node pkg="detection_localisation" type="frame_detection" name="frame_detection_node" output="screen" >  
@@ -10,6 +11,7 @@
     <param name="objectName"                type="str"    value="Goesser" /> 
     <param name="verbose"                   type="bool"   value="true" /> 
     <param name="numberImagesPerPose"       type="int"    value="20" />
+    <param name="numberOfPoses"             type="int"    value="$(arg posesNr)" />
 
     <!-- <param name="broadcast_transform"       type="bool"   value="true" />
     <param name="proj_error_threshold"      type="double" value="25" />  -->
