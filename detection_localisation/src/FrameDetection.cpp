@@ -443,7 +443,24 @@ public:
                 f << pzStat_[3] << "; " << rotxStat_[3] << "; " << rotyStat_[3] << "; " << rotzStat_[3] << std::endl;
            f.close();
            ROS_INFO("Saved Pose %i", pose_);
-        } else ROS_INFO("Unable to open file %s", filename.c_str() );        
+        } else ROS_INFO("Unable to open file %s", filename.c_str() );   
+
+        std::string filename2 = pathModel_ + "DetectionDataLog.txt";
+        std::ofstream f2; 
+        f2.open(filename2.c_str(), std::ifstream::app);
+        if (f2.is_open())
+        {
+            f2 << targetName_ << "; " << pose_ << "; Median; "  << matchesStat_[0] << "; " << pxStat_[0] << "; " << pyStat_[0] << "; ";
+                f2 << pzStat_[0] << "; " << rotxStat_[0] << "; " << rotyStat_[0] << "; " << rotzStat_[0] << std::endl;
+            f2 << targetName_ << "; " << pose_ << "; Mean; "  << matchesStat_[1] << "; " << pxStat_[1] << "; " << pyStat_[1] << "; ";
+                f2 << pzStat_[1] << "; " << rotxStat_[1] << "; " << rotyStat_[1] << "; " << rotzStat_[1] << std::endl;
+            f2 << targetName_ << "; " << pose_ << "; Range; "  << matchesStat_[2] << "; " << pxStat_[2] << "; " << pyStat_[2] << "; ";
+                f2 << pzStat_[2] << "; " << rotxStat_[2] << "; " << rotyStat_[2] << "; " << rotzStat_[2] << std::endl;               
+            f2<< targetName_ << "; " << pose_ << "; Stdev; "  << matchesStat_[3] << "; " << pxStat_[3] << "; " << pyStat_[3] << "; ";
+                f2 << pzStat_[3] << "; " << rotxStat_[3] << "; " << rotyStat_[3] << "; " << rotzStat_[3] << std::endl;
+           f2.close();
+           ROS_INFO("Saved Pose %i global", pose_);
+        } else ROS_INFO("Unable to open file %s", filename2.c_str() );       
 
     }
     
