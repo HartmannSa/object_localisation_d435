@@ -26,10 +26,13 @@ std::string toString(const T &value) {
 }
 
 
-std::vector<cv::Mat> getHorizontalStack(int n, std::string path,  std::string extraPath, std::string name )
+std::vector<cv::Mat> getHorizontalStack(int n, std::string path,  std::string extraPath, std::string name, int id )
 {
     std::vector<cv::Mat> matrices;
     int i = 1;
+    std::vector<std::string> alpha = {"20", "25", "35", "35", "35", "35", "45", "55", "62"};
+    std::vector<std::string> hk = {"0,55","0,65", "0,63", "0,88","1,15", "1,38", "1,09", "1,26", "1,36" };
+
     while (ros::ok() && i <= n) 
     { 
         cv::Mat img; 
@@ -41,13 +44,13 @@ std::vector<cv::Mat> getHorizontalStack(int n, std::string path,  std::string ex
         }
                   
         img = cv::imread(filename);
-        if (img.empty()) { ROS_ERROR("Could not open or find the image: %s", filename.c_str());}        
+        if (img.empty()) { ROS_ERROR("Could not open or find the image: %s", filename.c_str());}      
 
         if (i == 1) {
             ROS_INFO("Start loading with image %s", filename.c_str() );
-            cv::putText(img, name, cv::Point(10,60), cv::FONT_HERSHEY_COMPLEX_SMALL, 3.0, cv::Scalar(255,255,255), 2, cv:: LINE_AA); 
+            cv::putText(img, alpha[id] +"deg; " + hk[id] + "m", cv::Point(10,60), cv::FONT_HERSHEY_COMPLEX_SMALL, 3.5, cv::Scalar(255,255,255), 4, cv:: LINE_AA); 
         } else {
-            cv::putText(img, std::to_string(i), cv::Point(10,60), cv::FONT_HERSHEY_COMPLEX_SMALL, 3.0, cv::Scalar(255,255,255), 2, cv:: LINE_AA); 
+            cv::putText(img, std::to_string(i), cv::Point(10,60), cv::FONT_HERSHEY_COMPLEX_SMALL, 3.5, cv::Scalar(255,255,255), 4, cv:: LINE_AA); 
         } 
 
         matrices.push_back(img);
@@ -81,7 +84,7 @@ int main(int argc, char** argv)
         ROS_INFO("Loading image series number %d: %s", i, object_name[i].c_str() );
         cv::Mat imgStack;
         std::vector<cv::Mat> matrices;
-        matrices = getHorizontalStack(numberImages_, pathModel_, extraFolder_, object_name[i]);
+        matrices = getHorizontalStack(numberImages_, pathModel_, extraFolder_, object_name[i], i);
         cv::hconcat(matrices, imgStack);
         matricesV.push_back(imgStack);
         i++;

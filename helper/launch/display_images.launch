@@ -1,7 +1,8 @@
 <?xml version="1.0" ?>
 <launch>
   <arg name="nameSave"  default=""/>  
-  <arg name="folder"    default=""/>  <!-- e.g /keypoints -->
+  <!-- <arg name="folder"    default=""/>  -->
+  <arg name="folder"    default=""/> 
 
   <!--Start Learning-->
   <node pkg="helper" type="displayImages" name="display_images" output="screen" >
