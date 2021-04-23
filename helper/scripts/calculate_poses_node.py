@@ -73,8 +73,8 @@ class PoseCalculator:
         self.__circular         = rospy.get_param("~circular", True)        
         self.__radius           = rospy.get_param("~radius", '1.0')
         self.__angleRange       = rospy.get_param('~angle_range','180')
-        self.__dx               = rospy.get_param('~dx','0.3')
-        self.__dy               = rospy.get_param('~dy','0.2')
+        self.__dx               = rospy.get_param('~dx','0.32')
+        self.__dy               = rospy.get_param('~dy','0.21')
         self.__pose_sub         = rospy.Subscriber("/move_base_simple/goal", PoseStamped, self.__calcPoints__)
         self.__calc_pub         = rospy.Publisher("/calculation_done", String, queue_size=2)   
     
@@ -99,16 +99,18 @@ class PoseCalculator:
 
         off_point = geometry_msgs.msg.PointStamped()
         off_point.header.frame_id = "targetFrameI"
-        off_point.point.x = self.__radius + self.__dx
-        off_point.point.y = self.__dy
+        # off_point.point.x = self.__radius # d_OB ####OLD + self.__dx   # d_OB
+        # off_point.point.y = self.__dy
+        off_point.point.x = 0
+        off_point.point.y = 0
         off_point.point.z = 0
 
         transform_targetI = geometry_msgs.msg.TransformStamped()
         transform_targetI.header.frame_id = "targetFrame"
         transform_targetI.child_frame_id = "targetFrameI"
-        transform_targetI.transform.translation.x = 0
-        transform_targetI.transform.translation.y = 0
-        transform_targetI.transform.translation.z = 0
+        # transform_targetI.transform.translation.x = 0
+        # transform_targetI.transform.translation.y = 0
+        # transform_targetI.transform.translation.z = 0
 
         angleRange_rad  = self.__angleRange*math.pi/180
         angleStep = angleRange_rad/(self.__numberPoses-1)
@@ -121,8 +123,8 @@ class PoseCalculator:
         pose_i.pose.position.z = 0
         for i in range(0, self.__numberPoses):
             # Cam pose
-            pose_i.pose.position.x = self.__radius*math.cos(i*angleStep)
-            pose_i.pose.position.y = self.__radius*math.sin(i*angleStep)
+            pose_i.pose.position.x = (self.__radius-self.__dx)*math.cos(i*angleStep)    # d_OB-d_x
+            pose_i.pose.position.y = (self.__radius-self.__dx)*math.sin(i*angleStep)
             q = quaternion_from_euler(0, 0, math.pi+i*angleStep)
             pose_i.pose.orientation.x = q[0]
             pose_i.pose.orientation.y = q[1]
@@ -132,16 +134,26 @@ class PoseCalculator:
             poses[i+1]=pose_i_transformed
 
             # Calculate Offset (Base) Pose
-            q_i = quaternion_from_euler(0, 0, i*angleStep)
+            # q_i = quaternion_from_euler(0, 0, i*angleStep)
+            # transform_targetI.transform.rotation.x = q_i[0]
+            # transform_targetI.transform.rotation.y = q_i[1]
+            # transform_targetI.transform.rotation.z = q_i[2]
+            # transform_targetI.transform.rotation.w = q_i[3] 
+            
+            q_i = quaternion_from_euler(0, 0, math.pi + i*angleStep)
             transform_targetI.transform.rotation.x = q_i[0]
             transform_targetI.transform.rotation.y = q_i[1]
             transform_targetI.transform.rotation.z = q_i[2]
-            transform_targetI.transform.rotation.w = q_i[3] 
+            transform_targetI.transform.rotation.w = q_i[3]
+            transform_targetI.transform.translation.x = self.__radius*math.cos(i*angleStep)-self.__dy*math.sin(i*angleStep)
+            transform_targetI.transform.translation.y = self.__radius*math.sin(i*angleStep)+self.__dy*math.cos(i*angleStep)
+            transform_targetI.transform.translation.z = 0 
             
-            base_point_T = tf2_geometry_msgs.do_transform_point(off_point, transform_targetI)
+            base_point_T = tf2_geometry_msgs.do_transform_point(off_point, transform_targetI)          
             base_point = tf2_geometry_msgs.do_transform_point(base_point_T, transform_mapTarget)
+            
             base_pose = PoseStamped()
-            base_pose.header.frame_id = poses[i+1].header.frame_id
+            base_pose.header.frame_id = poses[i+1].header.frame_id  #map
             base_pose.pose.position.x = base_point.point.x
             base_pose.pose.position.y = base_point.point.y
             base_pose.pose.position.z = 0

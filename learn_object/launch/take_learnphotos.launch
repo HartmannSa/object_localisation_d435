@@ -3,8 +3,8 @@
     <arg name="path"            default="$(find learn_object)/model/$(arg target)/"/>
     <arg name="folderSave"      default="linear/"/>
     <arg name="numberImages"    default="20"/>
-    <!-- <arg name="filename_poses"  default="poses_circular_base.yaml"/> -->
     <arg name="filename_poses"  default="poses_linear.yaml"/>
+    <!-- <arg name="filename_poses"  default="poses_linear.yaml"/> -->
 
     <include file="$(find camera_d435)/launch/camera_stream.launch"/>     
 
