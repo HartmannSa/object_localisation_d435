@@ -32,6 +32,7 @@ std::vector<cv::Mat> getHorizontalStack(int n, std::string path,  std::string ex
     int i = 1;
     std::vector<std::string> alpha = {"20", "25", "35", "35", "35", "35", "45", "55", "62"};
     std::vector<std::string> hk = {"0,55","0,65", "0,63", "0,88","1,15", "1,38", "1,09", "1,26", "1,36" };
+    std::vector<std::string> phi = {"0,0", "16,4","32,7", "49,1", "65,5","81,8", "98,2", "114,5", "130,9", "147,3", "163,6", "180,0" };
 
     while (ros::ok() && i <= n) 
     { 
