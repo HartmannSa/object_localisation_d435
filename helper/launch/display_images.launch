@@ -1,16 +1,16 @@
 <?xml version="1.0" ?>
 <launch>
   <arg name="nameSave"  default=""/>  
-  <arg name="folder"    default=""/> 
-  <!-- <arg name="folder"    default="/keypoints"/>  -->
+  <!-- <arg name="folder"    default=""/>  -->
+  <arg name="folder"    default="/keypoints"/> 
 
   <!--Start Learning-->
   <node pkg="helper" type="displayImages" name="display_images" output="screen" >
     <param name="path"                      type="str"    value="$(find learn_object)/model/"/> 
     <param name="nameSave"                  type="str"    value="$(arg nameSave)"/>
     <param name="extraFolder"               type="str"    value="$(arg folder)"/>
-    <param name="numberOfImages"            type="int"    value="12" />
-    <param name="startNumber"               type="int"    value="7" />
+    <param name="numberOfImages"            type="int"    value="12" />  <!-- "BIS" -> geändert auf last image nr. -->
+    <param name="startNumber"               type="int"    value="7" /> <!-- VON -->
     <rosparam command="load"              file="$(find helper)/launch/yaml/imagesToDisplay.yaml" />
   </node>
 </launch>

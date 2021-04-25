@@ -32,9 +32,29 @@ std::vector<cv::Mat> getHorizontalStack(int n, std::string path,  std::string ex
     std::vector<cv::Mat> matrices;
     std::vector<std::string> alpha = {"20", "25", "35", "35", "35", "35", "45", "55", "62"};
     std::vector<std::string> hk = {"0,55","0,65", "0,63", "0,88","1,15", "1,38", "1,09", "1,26", "1,36" };
-    std::vector<std::string> camPose = {"K1", "K2", "K3", "K4", "K5", "K6", "K7", "K8", "K9"};
+    // std::vector<std::string> camPose = {"K1", "K2", "K3", "K4", "K5", "K6", "K7", "K8", "K9"};
     // std::vector<std::string> phi = {"0,0", "16,4","32,7", "49,1", "65,5","81,8", "98,2", "114,5", "130,9", "147,3", "163,6", "180,0" };
     std::vector<std::string> phi = {"0", "16","33", "49", "65","82", "98", "115", "131", "147", "164", "180" };
+    std::string camPose;
+    if (name == "goesser_20_55_"){
+        camPose = "K1";
+    } else if (name == "Goesser_25_65_") {
+        camPose = "K2";
+    } else if (name == "Goesser_35_88_") {
+        camPose = "K3";
+    } else if (name == "Goesser_45_109_") {
+        camPose = "K4";
+    } else if (name == "Goesser_55_126_") {
+        camPose = "K5";
+    } else if (name == "Goesser_62_136_") {
+        camPose = "K6";
+    } else if (name == "Goesser_35_63_") {
+        camPose = "K7";
+    } else if (name == "Goesser_35_115_") {
+        camPose = "K8";
+    } else if (name == "Goesser_35_138_") {
+        camPose = "K9";
+    }
 
     while (ros::ok() && i + startNr <= n) 
     { 
@@ -52,7 +72,7 @@ std::vector<cv::Mat> getHorizontalStack(int n, std::string path,  std::string ex
         if (i == 0 ) {
             ROS_INFO("Start loading with image %s", filename.c_str() );
             // cv::putText(img, "("+alpha[id] +"deg; " + hk[id] + "m)", cv::Point(8,60), cv::FONT_HERSHEY_COMPLEX_SMALL, 3.5, cv::Scalar(255,255,255), 4, cv:: LINE_AA); 
-            cv::putText(img, camPose[id] + "; Phi=" + phi[i+startNr-1] + "deg", cv::Point(8,460), cv::FONT_HERSHEY_COMPLEX_SMALL, 3.5, cv::Scalar(255,255,255), 4, cv:: LINE_AA);
+            cv::putText(img, camPose + "; Phi=" + phi[i+startNr-1] + "deg", cv::Point(8,460), cv::FONT_HERSHEY_COMPLEX_SMALL, 3.5, cv::Scalar(255,255,255), 4, cv:: LINE_AA);
         } else {
             // cv::putText(img, std::to_string(i+startNr), cv::Point(8,60), cv::FONT_HERSHEY_COMPLEX_SMALL, 3.5, cv::Scalar(255,255,255), 4, cv:: LINE_AA); // Nummerierung 
             cv::putText(img, phi[i+startNr-1] + "deg", cv::Point(8,460), cv::FONT_HERSHEY_COMPLEX_SMALL, 3.5, cv::Scalar(255,255,255), 4, cv:: LINE_AA);
@@ -117,7 +137,14 @@ int main(int argc, char** argv)
 
         if (nameSave_.empty())
         {
-            saving = pathModel_ + "imageStacks/" + "ImageStack_"+ buffer+ ".jpg";
+            saving = pathModel_ + "imageStacks/" + "ImageStack_"+ toString(startNr_) +"_" + toString(numberImages_) +"_" ;
+            if (extraFolder_.empty()) {
+                // saving = saving + buffer+ ".jpg";
+                saving = saving + ".jpg";
+            } else {
+                // saving = saving + "kp_" +buffer+ ".jpg";
+                saving = saving + "kp.jpg";
+            }            
         } else {
             saving = pathModel_ + "imageStacks/" + nameSave_ +".jpg";
         }  
