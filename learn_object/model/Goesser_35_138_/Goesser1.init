@@ -1,6 +1,6 @@
 4                   # Number of points
-0     0	     0      # Point 0
-0.400 0      0      # Point 3
-0.400 0.297  0      # Point 4
-0.400 0.297 -0.300  # Point 5
+-0.2	-0.148	0.3	# Point 0: X Y Z
+0.2	-0.148	0.3	# Point 3
+0.2	0.148	0.3	# Point 4
+0.2	0.148	0	# Point 5
 
