@@ -74,8 +74,6 @@ protected:
     int MACTHES_THRESHOLD = 40; 
     
     std::string objectName_;
-    std::string pathPackage_;       // path to package detection_localisation (starting in catkin_ws)
-    std::string pathObjectFolder_; 
     std::string modelFile_;
     std::string learningData_;
 
@@ -95,7 +93,6 @@ protected:
     std::string detectorName_;
     std::string extractorName_;
     std::string matcherName_;  
-    std::string configurationFile_;
     
     bool moving_;
     bool verbose_;
@@ -114,7 +111,6 @@ public:
         sub_ = n_.subscribe("/odom_comb", 1, &CamDetectionAction::analysisMovement, this);
         moving_ = false;         // In case topic isnt published
         ros::NodeHandle nh("~");
-        nh.param<std::string>("path_package", pathPackage_, "src/object_localisation_d435/detection_localisation");
         nh.param<bool>("verbose", verbose_, true);
         nh.param<int>("frameThreshold", frameThreshold, 20);
         cMoVec_.assign(frameThreshold, cMo_);
@@ -137,8 +133,7 @@ public:
                 ROS_INFO("Robot starts to move");
             else
                 ROS_INFO("Robot stops moving");
-        }
-                    
+        }                    
     }
 
     bool startCamera(int width, int height, int fps)
@@ -182,13 +177,11 @@ public:
             detectorName_ = name;    // "FAST"
             extractorName_ = name;
             matcherName_ = "BruteForce-Hamming";
-            configurationFile_ ="detection-config.xml";
         }
         if (name == "SIFT" || "SURF"){
             detectorName_ = name;
             extractorName_ = name;
             matcherName_ = "FlannBased"; // "BruteForce"
-            configurationFile_ ="detection-config-" + name + ".xml";
         }  
         keypoint.setDetector(detectorName_);
         keypoint.setExtractor(extractorName_);
@@ -207,7 +200,6 @@ public:
         vpDisplay::display(I_gray);
         vpDisplay::displayText(I_gray, 10, 10, "Detection and localization in process...", vpColor::red);
         vpDisplay::displayText(I_gray, 30, 10, "FPS measured: " + std::to_string(fps_measured) , vpColor::red);
-
     }
 
     void executeCB(const detection_localisation::CamDetectionGoalConstPtr &goal)
@@ -241,21 +233,18 @@ public:
                         STATUS = STATUS_ABORTED; 
                     }              
                     
-                    // Check files for object model
-                    pathObjectFolder_ = pathPackage_ + "/model/" + objectName_ + "/";                    
-                    if (vpIoTools::checkFilename(pathObjectFolder_ + objectName_ + ".cao")) {
-                        modelFile_ = pathObjectFolder_ + objectName_ + ".cao";
-                    } else if (vpIoTools::checkFilename(pathObjectFolder_ + objectName_ + ".wrl")) {
-                        modelFile_ = pathObjectFolder_ + objectName_ + ".wrl";
+                    // Check file for object model
+                    if (vpIoTools::checkFilename(goal->file_3Dmodel)) {
+                        modelFile_ = goal->file_3Dmodel;
                     } else {
-                        ROS_ERROR("Can not open object modelfile(.cao or .wrl): %s", (pathObjectFolder_ + objectName_).c_str() );
+                        ROS_ERROR("Can not open object modelfile(.cao or .wrl): %s", (goal->file_3Dmodel).c_str() );
                         STATUS = STATUS_ABORTED;                        
                     }
 
                     // *** Check file for learning data
-                    learningData_ = goal->learning_data;                   
-                    if (!vpIoTools::checkFilename(pathObjectFolder_ + learningData_)) {
-                        ROS_ERROR("Can not open learning data: %s", (pathObjectFolder_+learningData_).c_str());            
+                    learningData_ = goal->file_learning_data;                   
+                    if (!vpIoTools::checkFilename(learningData_)) {
+                        ROS_ERROR("Can not open learning data: %s", (learningData_).c_str());            
                         STATUS = STATUS_ABORTED;
                     }              
 
@@ -275,18 +264,14 @@ public:
                     success_ = false;
                     // *** Display settings                    
                     unsigned int _posx = 100, _posy = 50;        
-                    d_g.init(I_gray, _posx, _posy, "Color stream");
-                    // d_d.init(       I_depth, _posx + I_gray.getWidth()+10,  _posy,                          "Depth stream");
-                    // *** Read train image as reference
-                    // vpImageIo::read(I_train, pathPackage_ + "/model/" + goal->object_name + "/" + goal->object_name + "_gray.jpeg");
-                    // ROS_INFO("Reference keypoints = %i", keypoint.buildReference(I_train) );                    
+                    d_g.init(I_gray, _posx, _posy, "Color stream");                  
 
                     // *** Tracker settings
                     tracker.setOgreVisibilityTest(false);
                     tracker.setDisplayFeatures(true);
                     tracker.loadModel(modelFile_);
-                    if (vpIoTools::checkFilename(pathObjectFolder_ + objectName_ + ".xml")) {
-                        tracker.loadConfigFile(pathObjectFolder_ + objectName_ + ".xml");
+                    if (vpIoTools::checkFilename(goal->file_tracker_config)) {
+                        tracker.loadConfigFile(goal->file_tracker_config); // .xml file
                         tracker.getCameraParameters(camColor_);
                     } else {
                         vpMe me;
@@ -301,8 +286,8 @@ public:
                         tracker.setMovingEdge(me);
                         // cam.initPersProjWithoutDistortion(839, 839, 325, 243);
                         tracker.setCameraParameters(camColor_);
-                        tracker.setAngleAppear(vpMath::rad(70));
-                        tracker.setAngleDisappear(vpMath::rad(80));
+                        tracker.setAngleAppear(vpMath::rad(98));
+                        tracker.setAngleDisappear(vpMath::rad(98));
                         tracker.setNearClippingDistance(0.1);
                         tracker.setFarClippingDistance(100.0);
                         tracker.setClipping(tracker.getClipping() | vpMbtPolygon::FOV_CLIPPING);
@@ -311,9 +296,9 @@ public:
                     // *** Keypoint Settings (detector, extractor, matcher, learning data)                   
                     setDetectionSettings("SURF", keypoint);
                     bool binMode = ( learningData_.rfind(".bin") != std::string::npos );
-                    keypoint.loadLearningData(pathObjectFolder_ + learningData_, binMode); 
-                    if (vpIoTools::checkFilename(pathObjectFolder_ + configurationFile_)){                    
-                        keypoint.loadConfigFile(pathObjectFolder_ + configurationFile_);
+                    keypoint.loadLearningData(learningData_, binMode); 
+                    if (vpIoTools::checkFilename(goal->file_detection_config)){                    
+                        keypoint.loadConfigFile(goal->file_detection_config);
                     } else {            
                         keypoint.setMatchingRatioThreshold(0.8);
                         keypoint.setUseRansacVVS(true);
@@ -517,26 +502,6 @@ public:
         
     }
 
-    void saveData()
-    {
-        std::string filename = pathPackage_ + "/DetectionDataLog.txt";
-        std::ofstream f;
-        f.open(filename.c_str());
-
-        f << "cMoVec_" << std::endl;
-        for (int i = 0; i < cMoVec_.size(); i++)
-        {
-            f << cMoVec_[i] << ";\n" << std::endl;
-        }
-
-        f << "\nCalculated cMo" << std::endl;
-        f << cMo_ << std::endl;
-
-        f << "\nresult object pose" << std::endl;
-        f << result_.object_pose << std::endl;           
-
-        f.close();
-    }
 
     void printHomogeneousMatrix(const vpHomogeneousMatrix M)
     {

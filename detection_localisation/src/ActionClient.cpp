@@ -1,28 +1,19 @@
 #include <detection_localisation/CamDetectionAction.h> 
 #include <actionlib/client/simple_action_client.h>
-
 #include <ros/ros.h>
 #include <move_base_msgs/MoveBaseAction.h>
 #include <geometry_msgs/PoseArray.h>
-
 #include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/Transform.h>
 #include "geometry_msgs/PoseStamped.h"
-
 #include <std_msgs/Bool.h>
-
 #include <fstream>
-
 #include <tf2_ros/transform_listener.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 typedef actionlib::SimpleActionClient<detection_localisation::CamDetectionAction> DetectionClient;
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
-
-// """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""//
-//  CLASS CamDetectionClient                                                                                         //
-// """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""" //
 class CamDetectionClient
 {
 private:
@@ -49,11 +40,7 @@ private:
   std::string target_frame_;
   std::string cam_frame_;
 
-public:
-  
-  // ------------------------------------------------------ //
-  //  Konstruktor und Destruktor                            //
-  // ------------------------------------------------------ //   
+public:    
   CamDetectionClient() : client_detect("detection", true), 
                         client_move("move_base", true),
                         tf2_listener_(tf2_buffer_), 
@@ -61,18 +48,16 @@ public:
                         cam_frame_("camera_arm_color_optical_frame") 
   {
     while(!client_detect.waitForServer(ros::Duration(5.0))){
-        ROS_INFO("Waiting for the detection action server to come up");
-    }
+        ROS_INFO("Waiting for the detection action server to come up");}
     ROS_INFO("detection action server is up");
     while(!client_move.waitForServer(ros::Duration(5.0))){
-        ROS_INFO("Waiting for the move_base action server to come up");
-    }
+        ROS_INFO("Waiting for the move_base action server to come up");}
     ROS_INFO("move_base action server is up");   
   }
 
   ~CamDetectionClient() {}
   
-  void detectObject(std::string objekt_name, std::string learning_data, std::string path_poses)
+  void detectObject(std::string path_poses, std::string objekt_name, std::string model_file, std::string learning_data, std::string tracker_settings, std::string detection_settings)
   {  
     move_goal_number = 0;
     trial = 0;
@@ -80,7 +65,10 @@ public:
     loadPoses(path_poses);
 
     detection_goal.object_name = objekt_name;
-    detection_goal.learning_data = learning_data;    
+    detection_goal.file_3Dmodel = model_file;
+    detection_goal.file_learning_data = learning_data;  
+    detection_goal.file_tracker_config = tracker_settings;
+    detection_goal.file_detection_config = detection_settings;  
     client_detect.sendGoal(detection_goal, 
                     boost::bind(&CamDetectionClient::doneCb, this, _1, _2),
                     boost::bind(&CamDetectionClient::activeCb, this),
@@ -248,15 +236,17 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "detection_client");
   ros::NodeHandle nh("~");
-  std::string path;
-  std::string object_name;
-  std::string learning_data;
-  nh.param<std::string>("object_name", object_name, "Teabox");
-  nh.param<std::string>("learning_data", learning_data, "Teabox0_learning_data.bin");
+  std::string path, object_name, learning_data, model_file, tracker_settings, detection_settings;
   nh.param<std::string>("path_searchposes", path, "src/object_localisation_d435/detection_localisation/config/searchPoses.config");
+  nh.param<std::string>("object_name", object_name, "");
+  nh.param<std::string>("file_3Dmodel", model_file, "");
+  nh.param<std::string>("learning_data", learning_data, "");
+  nh.param<std::string>("tracker_settings", detection_settings, "");
+  nh.param<std::string>("detection_settings", detection_settings, "");
+
   
   CamDetectionClient cam_detection_client;
-  cam_detection_client.detectObject(object_name, learning_data, path);
+  cam_detection_client.detectObject(path, object_name, model_file, learning_data, tracker_settings, detection_settings);
   ros::spin();
   return 0;
 }

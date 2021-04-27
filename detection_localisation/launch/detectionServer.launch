@@ -3,7 +3,7 @@
 
   <!--Start detection-->
   <node pkg="detection_localisation" type="detection_server" name="detection_server" output="screen" >  
-    <param name="path_package"              type="str"    value="$(find detection_localisation)" /> 
+    <!-- <param name="path_package"              type="str"    value="$(find detection_localisation)" />  -->
     <param name="verbose"                   type="bool"   value="true" /> 
     <param name="frameThreshold"            type="int"    value="20" />
   </node>

@@ -1,12 +1,20 @@
 <?xml version="1.0" ?>
 <launch>
+  <arg name="object_name"         default="Goesser_20_55_" />
+  <arg name="path"                default="$(find detection_localisation)/model/$(arg object_name)/" />
+  <arg name="file_3Dmodel"        default="$(arg path)$(arg object_name).cao" />
+  <arg name="learning_data"       default="$(arg path)$(arg object_name)12_learning_data.bin" />
+  <arg name="tracker_settings"    default="$(arg path)$tracker.xml" />
+  <arg name="detection_settings"  default="$(arg path)$detection-config.xml" />
 
   <node pkg="detection_localisation" type="detection_client" name="detection_client" output="screen" > 
     <param name="path_searchposes"          type="str"    value="$(find detection_localisation)/config/searchPoses.config" /> 
-    <param name="object_name"               type="str"    value="Goesser_20_55_" />
-    <!-- <param name="learning_data"             type="str"    value="Teabox0_learning_data.xml" /> -->
-    <param name="learning_data"             type="str"    value="Goesser_20_55_12_learning_data.bin" />
-    <!-- <param name="debug"                     type="bool"   value="true" />  -->
+    <param name="object_name"               type="str"    value="$(arg object_name)" />
+    <param name="file_3Dmodel"              type="str"    value="$(arg file_3Dmodel)" />
+    <param name="learning_data"             type="str"    value="$(arg learning_data)" />
+    <param name="tracker_settings"          type="str"    value="$(arg tracker_settings)" />
+    <param name="detection_settings"        type="str"    value="$(arg detection_settings)" />
+    
     <!-- <param name="max_time"                  type="double" value="200" />  -->
   </node>
 

@@ -72,8 +72,8 @@ public:
         nh.param<bool>("binMode", binMode_, true);                                                  // If true: learningData is saved as .bin, otherwise it is saved as .xml
         learningExtension_ = binMode_ ? ".bin" : ".xml";              
         nh.param<int>("TrainImageNumber", maxTrainImageNumber_, 3);                               // number of image(s) to save
-        nh.param<double>("alphaAppear", alphaAp_, 70.0);
-        nh.param<double>("alphaDisappear", alphaDi_, 80.0);
+        nh.param<double>("alphaAppear", alphaAp_, 98.0);
+        nh.param<double>("alphaDisappear", alphaDi_, 98.0);
     }
 
     ~Detection(void) {}      

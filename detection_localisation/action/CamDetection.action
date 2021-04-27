@@ -1,7 +1,9 @@
 #goal definition
 string object_name
-string learning_data
-# float32 max_time
+string file_3Dmodel
+string file_learning_data
+string file_tracker_config
+string file_detection_config
 ---
 #result definition
 geometry_msgs/PoseStamped object_pose
