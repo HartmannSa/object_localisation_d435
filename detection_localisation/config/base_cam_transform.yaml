@@ -1,0 +1,8 @@
+target_frame: camera_arm_color_optical_frame
+source_frame: base_link
+x: 0.32
+y: 0.21
+z: 0.55         # Kamerahöhe - BaseKOShöhe
+roll: -1.9199
+pitch: 0   # 1.5708 - alpha
+yaw:  -1.5708

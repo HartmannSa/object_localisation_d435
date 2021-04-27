@@ -7,10 +7,14 @@
 
 #include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/Transform.h>
+#include "geometry_msgs/PoseStamped.h"
 
 #include <std_msgs/Bool.h>
 
 #include <fstream>
+
+#include <tf2_ros/transform_listener.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 typedef actionlib::SimpleActionClient<detection_localisation::CamDetectionAction> DetectionClient;
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
@@ -37,13 +41,13 @@ private:
   move_base_msgs::MoveBaseGoal move_goal;
   geometry_msgs::PoseArray posearray_;
   int move_goal_number;
-  int trial;
-  
+  int trial;  
   bool reached_end_of_searchpath;
-  bool manual_ok_for_next_pose_;  // bool moveRobot_;
-  bool manual_ok_;
-  ros::NodeHandle n_;
-  ros::Subscriber sub_;
+
+  tf2_ros::Buffer tf2_buffer_;
+  tf2_ros::TransformListener tf2_listener_;
+  std::string target_frame_;
+  std::string cam_frame_;
 
 public:
   
@@ -51,9 +55,11 @@ public:
   //  Konstruktor und Destruktor                            //
   // ------------------------------------------------------ //   
   CamDetectionClient() : client_detect("detection", true), 
-                        client_move("move_base", true)
+                        client_move("move_base", true),
+                        tf2_listener_(tf2_buffer_), 
+                        target_frame_("map"),
+                        cam_frame_("camera_arm_color_optical_frame") 
   {
-    sub_ = n_.subscribe("/manual_ok", 10, &CamDetectionClient::setManualOk, this);
     while(!client_detect.waitForServer(ros::Duration(5.0))){
         ROS_INFO("Waiting for the detection action server to come up");
     }
@@ -61,23 +67,13 @@ public:
     while(!client_move.waitForServer(ros::Duration(5.0))){
         ROS_INFO("Waiting for the move_base action server to come up");
     }
-     ROS_INFO("move_base action server is up");
+    ROS_INFO("move_base action server is up");   
   }
 
   ~CamDetectionClient() {}
   
-  // ------------------------------------------------------ //
-  //  DetectObject ("Main Funktion")                        //
-  // ------------------------------------------------------ //
-  void detectObject(std::string objekt_name, std::string learning_data, std::string path_poses, bool debug)
+  void detectObject(std::string objekt_name, std::string learning_data, std::string path_poses)
   {  
-    if (debug)
-    {
-      manual_ok_for_next_pose_ = true;
-      manual_ok_ = false;
-    } else {
-      manual_ok_for_next_pose_ = false;
-    } 
     move_goal_number = 0;
     trial = 0;
     reached_end_of_searchpath = false;
@@ -90,15 +86,7 @@ public:
                     boost::bind(&CamDetectionClient::activeCb, this),
                     boost::bind(&CamDetectionClient::feedbackCb, this, _1));     
   }
-  void setManualOk(const std_msgs::Bool::ConstPtr& msg)
-  {
-    manual_ok_ = msg->data;
-    ROS_INFO("%d", msg->data);
-  }
 
-  // ------------------------------------------------------ //
-  //  Load search poses from config file                           //
-  // ------------------------------------------------------ //
   void loadPoses(std::string path)
   {
     std::ifstream file;    
@@ -137,9 +125,6 @@ public:
     } else ROS_INFO("Unable to open file %s", path.c_str() ); 
   }
 
-  // ------------------------------------------------------ //
-  //  Set a Goal for move_Base                              //
-  // ------------------------------------------------------ //
   void setMoveGoal(int goal_number, std::string frame = "map")
   {
     move_goal.target_pose.header.stamp = ros::Time::now(); 
@@ -148,9 +133,26 @@ public:
     move_goal.target_pose.pose = posearray_.poses[goal_number];
   }  
 
-  // ------------------------------------------------------ //
-  //  doneCallback                                          //
-  // ------------------------------------------------------ //
+  void calcMoveGoal(const geometry_msgs::PoseStamped pose_in_camKOS)
+  {
+    geometry_msgs::PoseStamped pose_map;
+    geometry_msgs::TransformStamped map_to_cam_transform;
+
+   try {
+      map_to_cam_transform = tf2_buffer_.lookupTransform(target_frame_, cam_frame_, ros::Time(0));
+      tf2::doTransform(pose_in_camKOS, pose_map, map_to_cam_transform);
+      ROS_INFO("Pose in Map (x:%f y:%f z:%f)\n", 
+             pose_map.pose.position.x,
+             pose_map.pose.position.y,
+             pose_map.pose.position.z);
+    } catch (tf2::TransformException &ex) 
+    {
+      ROS_WARN("Failure %s\n", ex.what()); 
+    }
+
+    // Take x,y,z as new goal
+  }
+
   void doneCb(const actionlib::SimpleClientGoalState& state,
               const detection_localisation::CamDetectionResultConstPtr& result)
   {
@@ -159,25 +161,25 @@ public:
     ROS_INFO("orientation: %.2f; %.2f; %.2f [degree]", result->angles.x, result->angles.y, result->angles.z );
     ROS_INFO("rotation stdev: %f; %f; %f", result->rotx_stdev, result->roty_stdev, result->rotz_stdev );
     ROS_INFO("translation stdev: %f; %f; %f", result->px_stdev, result->py_stdev, result->pz_stdev );
+
+    calcMoveGoal(result->object_pose);
+
     ros::shutdown();
   }
 
-  // ------------------------------------------------------ //
-  //  activeCallback                                        //
-  // ------------------------------------------------------ //
   void activeCb()
   {
     ROS_INFO("Goal just went active");
 
     setMoveGoal(move_goal_number);
     // ROS_INFO("Sending first nav-goal with number %i", move_goal_number);   
-    ROS_INFO("Sending first nav-goal with number %i: %.2f; %.2f; %.2f", move_goal_number, posearray_.poses[move_goal_number].position.x, posearray_.poses[move_goal_number].position.y, posearray_.poses[move_goal_number].position.z);    
+    ROS_INFO("Sending first nav-goal with number %i: %.2f; %.2f; %.2f", move_goal_number, 
+              posearray_.poses[move_goal_number].position.x, 
+              posearray_.poses[move_goal_number].position.y, 
+              posearray_.poses[move_goal_number].position.z);    
     client_move.sendGoal(move_goal);
   } 
-  
-  // ------------------------------------------------------ //
-  //  feedbackCallback                                      //
-  // ------------------------------------------------------ //
+
   void feedbackCb(const detection_localisation::CamDetectionFeedbackConstPtr& feedback)
   {
     //  if (feedback->state != feedbackPrevious_.state) {ROS_INFO("Got Feedback with state %i", feedback->state);}
@@ -185,7 +187,6 @@ public:
     // ROS_INFO("Object position:    [%.2f; %.2f; %.2f]", feedback->estimated_pose.pose.position.x, feedback->estimated_pose.pose.position.y, feedback->estimated_pose.pose.position.z );
     // ROS_INFO("Object orientation: [%.2f; %.2f; %.2f; %.2f]", feedback->estimated_pose.pose.orientation.x, feedback->estimated_pose.pose.orientation.y, feedback->estimated_pose.pose.orientation.z, feedback->estimated_pose.pose.orientation.w );
     
-
     actionlib::SimpleClientGoalState moveState = client_move.getState();          
     switch (feedback->state){
       case 0: //STATE_SEARCHING           
@@ -217,19 +218,7 @@ public:
             ROS_INFO("Cancel detection Goal %s.", detection_goal.object_name.c_str()); 
             move_goal_number = 0; // Continue search at Startposition  
           } 
-        }
-
-        // DEBUG
-        // if (manual_ok_) 
-        // {
-        //   ROS_INFO("Navigation state: %s", moveState.toString().c_str());
-        //   move_goal_number++;
-        //   setMoveGoal(move_goal_number);
-        //   ROS_INFO("Sending nav-goal with number %i: %.2f; %.2f; %.2f", move_goal_number, posearray_.poses[move_goal_number].position.x, posearray_.poses[move_goal_number].position.y, posearray_.poses[move_goal_number].position.z);    
-        //   client_move.sendGoal(move_goal);
-        //   manual_ok_ = false;
-        // }   
-
+        }  
         break;
       case 1: //(STATE_FINISH):
         break;
@@ -255,9 +244,6 @@ public:
   }
 };
 
-// """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""//
-//  MAIN                                                                                                             //
-// """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""" //
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "detection_client");
@@ -265,15 +251,12 @@ int main(int argc, char** argv)
   std::string path;
   std::string object_name;
   std::string learning_data;
-  bool debug;
   nh.param<std::string>("object_name", object_name, "Teabox");
   nh.param<std::string>("learning_data", learning_data, "Teabox0_learning_data.bin");
   nh.param<std::string>("path_searchposes", path, "src/object_localisation_d435/detection_localisation/config/searchPoses.config");
-  nh.param<bool>("debug", debug, false);
-
   
   CamDetectionClient cam_detection_client;
-  cam_detection_client.detectObject(object_name, learning_data, path, debug);
+  cam_detection_client.detectObject(object_name, learning_data, path);
   ros::spin();
   return 0;
 }

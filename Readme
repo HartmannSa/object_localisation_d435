@@ -204,6 +204,7 @@ roslaunch learn_object learn_keypoints.launch model:="Goesser" object:="Goesser_
 roslaunch helper display_images.launch 
 
 9) Analyse Detection
+roslaunch detection_localisation frameDetection.launch target:="goesser_20_55_" posesNr:="50"
 roslaunch detection_localisation frameDetection.launch target:="Goesser_25_65_" posesNr:="48"
 roslaunch detection_localisation frameDetection.launch target:="Goesser_27_56_" posesNr:="15"
 roslaunch detection_localisation frameDetection.launch target:="Goesser_35_63_" posesNr:="20"

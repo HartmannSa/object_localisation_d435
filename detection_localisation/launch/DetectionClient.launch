@@ -1,13 +1,16 @@
 <?xml version="1.0" ?>
 <launch>
 
-  <node pkg="mir_vision" type="detection_client" name="detection_client" output="screen" > 
-    <param name="path_searchposes"          type="str"    value="$(find mir_vision)/config/searchPoses.config" /> 
-    <param name="object_name"               type="str"    value="Goesser1" />
+  <node pkg="detection_localisation" type="detection_client" name="detection_client" output="screen" > 
+    <param name="path_searchposes"          type="str"    value="$(find detection_localisation)/config/searchPoses.config" /> 
+    <param name="object_name"               type="str"    value="Goesser_20_55_" />
     <!-- <param name="learning_data"             type="str"    value="Teabox0_learning_data.xml" /> -->
-    <param name="learning_data"             type="str"    value="Goesser17_learning_data.bin" />
-    <param name="debug"                     type="bool"   value="true" /> 
+    <param name="learning_data"             type="str"    value="Goesser_20_55_12_learning_data.bin" />
+    <!-- <param name="debug"                     type="bool"   value="true" />  -->
     <!-- <param name="max_time"                  type="double" value="200" />  -->
   </node>
+
+  <!-- Publish Kamera Transform -->
+  <include file="$(find detection_localisation)/launch/tf_base_cam.launch" />      
 
 </launch>

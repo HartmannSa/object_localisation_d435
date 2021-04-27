@@ -12,10 +12,10 @@
   <!-- Panda -->
   <!-- <node pkg="tf" type="static_transform_publisher" name="Kamera_broadcaster" args="0.03 0 -0.06 0 0 0 1 panda_EE Kamera 10000" /> -->
   <!-- Miranda -->
-  <arg name="RotY"  value="-1.5708" />
+  <!-- <arg name="RotY"  value="-1.5708" />
   <arg name="RotX"  value="3.1415" />
 
   <node pkg="tf" type="static_transform_publisher" name="Kamera_broadcaster" args="0.03 0 -0.06 0 0 0 1 miranda/panda/panda_EE miranda/panda/kamera 1000" />
-  <node pkg="tf" type="static_transform_publisher" name="helper2_broadcaster" args="0 0 0 $(arg RotX) $(arg RotY) 0 miranda/mir/base_link miranda/mir/ref_kamera 1000" />
+  <node pkg="tf" type="static_transform_publisher" name="helper2_broadcaster" args="0 0 0 $(arg RotX) $(arg RotY) 0 miranda/mir/base_link miranda/mir/ref_kamera 1000" /> -->
 
 </launch>

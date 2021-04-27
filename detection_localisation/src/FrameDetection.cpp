@@ -433,13 +433,13 @@ public:
                 f << pose_<< "; " << n << "; " << matchesVec_[n-1] << "; " << pxVec_[n-1] << "; " << pyVec_[n-1] << "; " << pzVec_[n-1] << "; ";
                     f << rotxVec_[n-1] << "; " << rotyVec_[n-1] << "; " << rotzVec_[n-1] << std::endl;
             }
-            f << pose_ << "; Median: "  << matchesStat_[0] << "; " << pxStat_[0] << "; " << pyStat_[0] << "; ";
+            f << pose_ << "; Median; "  << matchesStat_[0] << "; " << pxStat_[0] << "; " << pyStat_[0] << "; ";
                 f << pzStat_[0] << "; " << rotxStat_[0] << "; " << rotyStat_[0] << "; " << rotzStat_[0] << std::endl;
-            f << pose_ << "; Mean: "  << matchesStat_[1] << "; " << pxStat_[1] << "; " << pyStat_[1] << "; ";
+            f << pose_ << "; Mean; "  << matchesStat_[1] << "; " << pxStat_[1] << "; " << pyStat_[1] << "; ";
                 f << pzStat_[1] << "; " << rotxStat_[1] << "; " << rotyStat_[1] << "; " << rotzStat_[1] << std::endl;
-            f << pose_ << "; Range: "  << matchesStat_[2] << "; " << pxStat_[2] << "; " << pyStat_[2] << "; ";
+            f << pose_ << "; Range; "  << matchesStat_[2] << "; " << pxStat_[2] << "; " << pyStat_[2] << "; ";
                 f << pzStat_[2] << "; " << rotxStat_[2] << "; " << rotyStat_[2] << "; " << rotzStat_[2] << std::endl;               
-            f << pose_ << "; Stdev: "  << matchesStat_[3] << "; " << pxStat_[3] << "; " << pyStat_[3] << "; ";
+            f << pose_ << "; Stdev; "  << matchesStat_[3] << "; " << pxStat_[3] << "; " << pyStat_[3] << "; ";
                 f << pzStat_[3] << "; " << rotxStat_[3] << "; " << rotyStat_[3] << "; " << rotzStat_[3] << std::endl;
            f.close();
            ROS_INFO("Saved Pose %i", pose_);
