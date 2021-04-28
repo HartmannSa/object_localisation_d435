@@ -28,10 +28,9 @@
 #include <visp/vpImage.h>
 #include <visp/vpImageIo.h>
 
-
-
 #include <tf2/LinearMath/Quaternion.h>
 #include <std_msgs/String.h>
+// #include <std_msgs/Bool.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/Transform.h>
@@ -47,7 +46,7 @@ class CamDetectionAction
 protected:
 
     ros::NodeHandle n_;
-    ros::Subscriber sub_;
+    ros::Subscriber sub_, sub2_;
     actionlib::SimpleActionServer<detection_localisation::CamDetectionAction> server_;    
     detection_localisation::CamDetectionResult result_;
     detection_localisation::CamDetectionFeedback feedback_;
@@ -95,6 +94,7 @@ protected:
     std::string matcherName_;  
     
     bool moving_;
+    bool reached_;
     bool verbose_;
     bool success_;
     int frameThreshold;
@@ -108,7 +108,8 @@ public:
         server_(n_, name, boost::bind(&CamDetectionAction::executeCB, this, _1), false)
     {        
         server_.start();
-        sub_ = n_.subscribe("/odom_comb", 1, &CamDetectionAction::analysisMovement, this);
+        sub_ = n_.subscribe("/odom", 1, &CamDetectionAction::analysisMovement, this); // simulation: /odom_comb
+        sub2_ = n_.subscribe("/searchPose_reached", 1, &CamDetectionAction::analysisDistance, this);
         moving_ = false;         // In case topic isnt published
         ros::NodeHandle nh("~");
         nh.param<bool>("verbose", verbose_, true);
@@ -118,13 +119,30 @@ public:
 
     ~CamDetectionAction(void) {}
 
+    void analysisDistance(const std_msgs::String::ConstPtr& msg)
+    {
+        
+        std::string close_distance = "reached";
+        std::string away_distance = "away";
+        if (!close_distance.compare(msg->data))
+        {
+            ROS_INFO("Received reached");
+            reached_ = true;
+        } else if(!away_distance.compare(msg->data)){
+            ROS_INFO("Received away");
+            reached_ = false;
+        } else {
+            ROS_INFO("Something went wrong...");
+        }
+
+    }
+
     void analysisMovement(const nav_msgs::Odometry::ConstPtr& msg)
     {
-        double t = 0.01;   // threshold
+        double t = 0.001;   // threshold
         double x = msg->twist.twist.linear.x;
         double z = msg->twist.twist.angular.z;
         bool moving_old = moving_;
-
         moving_ = (abs(x) > t || abs(z) > t) ? true : false;
 
         if (moving_ != moving_old && verbose_) 
@@ -372,55 +390,54 @@ public:
                     double error, elapsedTime;
                     keypoint.matchPoint(I_gray, camColor_, cMo_, error, elapsedTime);
                     matches = keypoint.getMatchedPointNumber();
+                    if (matches < MACTHES_THRESHOLD && !moving_ ){
+                        feedback_.state = STATE_SEARCHING;
+                        server_.publishFeedback(feedback_);
+                        ROS_INFO("PUBLISH FEEDBACK state %i (Searching)", feedback_.state );
+                    }
+
                     if (matches > MACTHES_THRESHOLD) 
                     {
-                        ROS_INFO("Matches: %i", matches);                       
+                        // ROS_INFO("Matches: %i", matches);                       
                         tracker.setPose(I_gray, cMo_);
                         feedback_.estimated_pose = createPosesStamped(cMo_);
                         feedback_.state = STATE_FOUND_MATCH;
-                        server_.publishFeedback(feedback_);
-                        ROS_INFO("PUBLISH FEEDBACK state %i", feedback_.state );
 
                         tracker.display(I_gray, cMo_, camColor_, vpColor::red, 2);                   
                         vpDisplay::displayFrame(I_gray, cMo_, camColor_, 0.025, vpColor::none, 3);
 
-                        if (!moving_){
+                        if (!moving_ && reached_){ // && reached 
+                            ROS_INFO("Not moving");
                             STATUS = STATUS_POSE_REFINEMENT;
                             cMoVec_.clear();
                             frame = 0;
                         }
-
+                        server_.publishFeedback(feedback_);
+                        ROS_INFO("PUBLISH FEEDBACK state %i", feedback_.state );
                     } else {
-                        feedback_.state = STATE_SEARCHING;
-                        if (!moving_) {
-                            server_.publishFeedback(feedback_);
-                            ROS_INFO("PUBLISH FEEDBACK state %i (Searching)", feedback_.state );
-                        }
+                        reached_ = false;
                     }
-                    vpDisplay::flush(I_gray);                    
-
+                    vpDisplay::flush(I_gray);                   
                     break; 
-                }    
+                }
+                    
                 case 10:    // STATUS_POSE_REFINEMENT: case robot stops moving -> Start to calculate finale cMo_                                    
                 {    
-                    ROS_INFO("STATUS: POSE REFINEMENT");
+                    // ROS_INFO("STATUS: POSE REFINEMENT");
                     feedback_.state = STATE_REFINE;
+
                     getFrame();
                     
                     double error, elapsedTime;
                     keypoint.matchPoint(I_gray, camColor_, cMo_, error, elapsedTime);
                     matches = keypoint.getMatchedPointNumber();
-                    ROS_INFO("Matches: %i", matches);
                     if (matches > MACTHES_THRESHOLD) 
                     {
                         tracker.setPose(I_gray, cMo_);   
                         cMoVec_.push_back(cMo_);
                         frame++;
-                        // ROS_INFO("Frame %i", frame);
                         if (frame >= frameThreshold)
                         {
-                            // *** Compute resulting cMo_ from cMoVec_                        
-                            // computeResult(cMo_, result_.translation_stdev, result_.rotation_stdev);  
                             computeResult(cMo_);                                                        
                             // ROS_INFO("STDV Translation: %f %f %f", result_.translation_stdev.x, result_.translation_stdev.y, result_.translation_stdev.z);
                             // ROS_INFO("STDV Rotation: %f %f %f", result_.rotation_stdev.x, result_.rotation_stdev.y, result_.rotation_stdev.z);
@@ -428,16 +445,16 @@ public:
                             feedback_.state = STATE_FINISH;
                             STATUS = STATUS_END_DETECTION;                        
                         }
-
                         tracker.display(I_gray, cMo_, camColor_, vpColor::red, 2);                   
-                        vpDisplay::displayFrame(I_gray, cMo_, camColor_, 0.025, vpColor::none, 3);
-                        
-                    } else {
-                        STATUS = STATUS_SEARCHING;
-                    }
+                        vpDisplay::displayFrame(I_gray, cMo_, camColor_, 0.025, vpColor::none, 3);                        
+                    } 
+                    // Was wenn hier doch keine Matches gefunden werden?
+                    // else {
+                    //     STATUS = STATUS_SEARCHING;
+                    // }
                     vpDisplay::flush(I_gray);
                     server_.publishFeedback(feedback_);
-                    ROS_INFO("PUBLISH FEEDBACK state %i", feedback_.state );
+                    ROS_INFO("PUBLISH FEEDBACK state %i, Frame %d", feedback_.state, frame );
                     break;
                 }                   
                 case 500:   // STATUS_END_DETECTION
@@ -453,12 +470,12 @@ public:
                         result_.angles = getAngles(cMo_);
                         server_.setSucceeded(result_);
                         ROS_INFO("SEARCH SUCCEEDED: FOUND %s!", objectName_.c_str());
-                    } else {
-                        STATUS = STATUS_EXIT;
-                    }
+                    } //else {
+                    STATUS = STATUS_EXIT;
+                    // }
                     break;
                 }
-                case 990:   // STATUS_PREEMPTEDF 
+                case 990:   // STATUS_PREEMPTED
                 {
                     ROS_INFO("STATUS: PREEMPTED (Request canceld)");
                     server_.setPreempted();
@@ -474,14 +491,12 @@ public:
                 }
                 case 999:   // STATUS_EXIT LOOP
                 {
-                    ROS_INFO("STATUS: EXIT CALLBACK");
+                    ROS_INFO("STATUS: EXIT");
                     proceed = false;  
                     break;  
                 }     
             }
-
         }
-
         // *** Send Feedback only when cMo_ is different to cMo_prev             
         // cMo.print(); std::cout << std::endl;
         // printHomogeneousMatrix(cMo);
@@ -495,13 +510,10 @@ public:
         //     sendFeedback(cMo);
         // }                
         // cMo_prev = cMo_;
-
         // *** Print Feedback
         // if (feedback_.state != feedback_previous.state) {ROS_INFO("Feedback state switched to %i", feedback_.state );}              
-        // feedback_previous = feedback_;
-        
+        // feedback_previous = feedback_;   
     }
-
 
     void printHomogeneousMatrix(const vpHomogeneousMatrix M)
     {
