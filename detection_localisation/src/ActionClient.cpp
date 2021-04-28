@@ -155,20 +155,32 @@ public:
       ROS_INFO("Distanz: %f", distance_base_target_);   
       if (abs(poseObject_baseKOS_.pose.position.z) < 0.2)
       {
+        float tolerance = 0.2;
+        float pi = 3.1415;
+        float angle_tolerance = 15*(pi/180);
 
-        if (distance_base_target_ > distance_thres_)  
+        // if ( distance_base_target_<distance_thres_-tolerance || distance_base_target_>distance_thres_+tolerance)  
+        // {
+
+
+        double angle = tan(poseObject_baseKOS_.pose.position.y/poseObject_baseKOS_.pose.position.x);
+
+
+        if ( distance_base_target_<distance_thres_-tolerance || 
+              distance_base_target_>distance_thres_+tolerance ||
+              abs(angle) > angle_tolerance)  
         {
-          float ratio = 0.2;
+          float ratio = distance_thres_/distance_base_target_ ;//0.2;
+          ratio = 1-ratio;
           targetPose_baseKOS_.header.stamp = ros::Time::now();
           targetPose_baseKOS_.header.frame_id = base_frame_;
           targetPose_baseKOS_.pose.position.x = ratio*poseObject_baseKOS_.pose.position.x;
           targetPose_baseKOS_.pose.position.y = ratio*poseObject_baseKOS_.pose.position.y;
           targetPose_baseKOS_.pose.position.z = 0;
-
-          double angle = tan(poseObject_baseKOS_.pose.position.y/poseObject_baseKOS_.pose.position.x);
+          
           tf2::Quaternion quatern_angle;
           quatern_angle.setRPY(0,0, angle);
-          targetPose_baseKOS_.pose.orientation = tf2::toMsg(quatern_angle);        
+          targetPose_baseKOS_.pose.orientation = tf2::toMsg(quatern_angle);  
 
           geometry_msgs::TransformStamped map_to_base_transform;
           try {
