@@ -4,7 +4,7 @@
     <arg name="radius"      default="1.1"/>  <!-- d_OB - dx -->
     <arg name="dx"          default="0.32"/> 
     <arg name="dy"          default="0.21"/>  
-    <arg name="number"      default="50"/> 
+    <arg name="number"      default="37"/> 
 
     <node name="pose_calculator" type="calculate_poses_node.py" pkg="helper" output="screen">
         <param name="file_path"             value="$(arg path)"/>
@@ -12,11 +12,11 @@
         <param name="dx"                    value="$(arg dx)"/> 
         <param name="dy"                    value="$(arg dy)"/>
 
-        <param name="linear"                value="true"/>
+        <param name="linear"                value="false"/>
         <param name="stepOffset"            value="0.4"/>
         <param name="stepDistance"          value="0.1"/>
 
-        <param name="circular"              value="false"/>
+        <param name="circular"              value="true"/>
         <param name="radius"                value="$(arg radius)"/>
         <param name="angle_range"           value="180"/>  
      
