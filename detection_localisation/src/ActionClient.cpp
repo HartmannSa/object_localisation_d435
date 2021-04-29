@@ -81,7 +81,7 @@ public:
   {  
     move_goal_number = 0;
     trial = 0;
-    distance_thres_ = 1.8;
+    distance_thres_ = 2.2;
     reached_end_of_searchpath = false;
     loadPoses(path_poses);
 
@@ -152,31 +152,30 @@ public:
       transform = tf2_buffer_.lookupTransform(base_frame_, cam_frame_, ros::Time(0));
       tf2::doTransform(pose_in_camKOS, poseObject_baseKOS_, transform);
       distance_base_target_ = sqrt(pow(poseObject_baseKOS_.pose.position.x,2) + pow(poseObject_baseKOS_.pose.position.y,2) + pow(poseObject_baseKOS_.pose.position.z,2));
-      ROS_INFO("Distanz: %f", distance_base_target_);   
+      ROS_INFO("Distanz to object: %f", distance_base_target_);   
       if (abs(poseObject_baseKOS_.pose.position.z) < 0.2)
       {
-        float tolerance = 0.2;
+        float tolerance = 0.1;
         float pi = 3.1415;
-        float angle_tolerance = 15*(pi/180);
-
-        // if ( distance_base_target_<distance_thres_-tolerance || distance_base_target_>distance_thres_+tolerance)  
-        // {
-
-
+        float angle_tolerance = 5*(pi/180);
         double angle = tan(poseObject_baseKOS_.pose.position.y/poseObject_baseKOS_.pose.position.x);
+        ROS_INFO("Winkel to object: %f", angle*180/pi);        
 
-
-        if ( distance_base_target_<distance_thres_-tolerance || 
-              distance_base_target_>distance_thres_+tolerance ||
-              abs(angle) > angle_tolerance)  
+        if ( (distance_base_target_>distance_thres_+tolerance) || (abs(angle) > angle_tolerance) ) // || distance_base_target_<distance_thres_-tolerance ||       
         {
-          float ratio = distance_thres_/distance_base_target_ ;//0.2;
-          ratio = 1-ratio;
           targetPose_baseKOS_.header.stamp = ros::Time::now();
           targetPose_baseKOS_.header.frame_id = base_frame_;
-          targetPose_baseKOS_.pose.position.x = ratio*poseObject_baseKOS_.pose.position.x;
-          targetPose_baseKOS_.pose.position.y = ratio*poseObject_baseKOS_.pose.position.y;
           targetPose_baseKOS_.pose.position.z = 0;
+
+          if (distance_base_target_ > distance_thres_+tolerance) {
+            float ratio = distance_thres_/distance_base_target_ ;//0.2;
+            ratio = 1-ratio;
+            targetPose_baseKOS_.pose.position.x = ratio*poseObject_baseKOS_.pose.position.x;
+            targetPose_baseKOS_.pose.position.y = ratio*poseObject_baseKOS_.pose.position.y;
+          } else{
+            targetPose_baseKOS_.pose.position.x = 0;
+            targetPose_baseKOS_.pose.position.y = 0;          
+          }          
           
           tf2::Quaternion quatern_angle;
           quatern_angle.setRPY(0,0, angle);
@@ -190,7 +189,7 @@ public:
             move_goal.target_pose.header.stamp = ros::Time::now();
             succeded = true;
 
-            ROS_INFO("Sending Pose in Map (x:%f y:%f z:%f  mit  qx:%f qy:%f qz:%f qw:%f)", 
+            ROS_INFO("Sending Pose in Map (x:%f y:%f z:%f qx:%f qy:%f qz:%f qw:%f)", 
             move_goal.target_pose.pose.position.x,
             move_goal.target_pose.pose.position.y,
             move_goal.target_pose.pose.position.z,
@@ -203,7 +202,7 @@ public:
 
             std_msgs::String Away;
             Away.data = "away";
-            ROS_INFO("Sending away");
+            // ROS_INFO("Sending away");
             pub_.publish(Away);
 
           } catch (tf2::TransformException &ex) {
@@ -212,7 +211,7 @@ public:
         } else {
           std_msgs::String Reached;
           Reached.data = "reached";
-          ROS_INFO("Sending reached");
+          ROS_INFO("Reached good position");
           pub_.publish(Reached);
           if (client_move.getState() == actionlib::SimpleClientGoalState::ACTIVE) {
             client_move.cancelGoal();
@@ -296,7 +295,7 @@ public:
 
   void activeCb()
   {
-    ROS_INFO("Goal just went active");
+    // ROS_INFO("Goal just went active");
 
     setMoveGoal(move_goal_number);
     // ROS_INFO("Sending first nav-goal with number %i", move_goal_number);   

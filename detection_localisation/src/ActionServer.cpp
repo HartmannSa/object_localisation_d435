@@ -70,7 +70,7 @@ protected:
     int STATUS_ABORTED = 991;
     int STATUS_EXIT = 999;  
 
-    int MACTHES_THRESHOLD = 40; 
+    int MACTHES_THRESHOLD = 33; 
     
     std::string objectName_;
     std::string modelFile_;
@@ -78,15 +78,13 @@ protected:
 
     // Camera Settings
     vpRealSense2 realsense_;
-    vpDisplayOpenCV d_g, d_d;
+    vpDisplayOpenCV d_c,d_g, d_d;
     vpCameraParameters camColor_, camDepth_; 
-    vpImage<vpRGBa> I_color; 
-    vpImage<unsigned char> I_gray, I_depth, I_matches, I_train;
-    vpImage<uint16_t> I_depth_raw; 
+    vpImage<vpRGBa> I_color_; 
+    vpImage<unsigned char> I_gray_, I_depth_;
+    vpImage<uint16_t> I_depth_raw_; 
     vpHomogeneousMatrix cMo_;
-    vpHomogeneousMatrix cMo_prev;
-    vpHomogeneousMatrix cMo_diff;
-    vpHomogeneousMatrix depth_M_color; 
+    vpHomogeneousMatrix depth_M_color_; 
     std::vector<vpHomogeneousMatrix> cMoVec_; 
 
     std::string detectorName_;
@@ -97,10 +95,14 @@ protected:
     bool reached_;
     bool verbose_;
     bool success_;
-    int frameThreshold;
+    bool useColor_;
+    int frameThreshold_;
 
-    double start, looptime, fps_measured;
-    std::vector<double> times_vec;
+    float hk_;
+    float alphaDegree_;
+
+    double start_, looptime_, fps_measured_;
+    std::vector<double> timesVec_;
     
     
 public:
@@ -113,28 +115,31 @@ public:
         moving_ = false;         // In case topic isnt published
         ros::NodeHandle nh("~");
         nh.param<bool>("verbose", verbose_, true);
-        nh.param<int>("frameThreshold", frameThreshold, 20);
-        cMoVec_.assign(frameThreshold, cMo_);
+        nh.param<int>("frameThreshold", frameThreshold_, 20);
+        nh.param<float>("hoeheKamera", hk_, 0.55);
+        nh.param<float>("alphaKameraDegree", alphaDegree_, 16);
+        nh.param<bool>("useColorImg", useColor_, true);
+        cMoVec_.assign(frameThreshold_, cMo_);
     }
 
     ~CamDetectionAction(void) {}
 
     void analysisDistance(const std_msgs::String::ConstPtr& msg)
-    {
-        
+    {        
         std::string close_distance = "reached";
         std::string away_distance = "away";
         if (!close_distance.compare(msg->data))
         {
-            ROS_INFO("Received reached");
+            if (verbose_) {
+                ROS_INFO("Received reached");}
             reached_ = true;
         } else if(!away_distance.compare(msg->data)){
-            ROS_INFO("Received away");
+            if (verbose_) {
+                ROS_INFO("Received away");}
             reached_ = false;
         } else {
-            ROS_INFO("Something went wrong...");
+            ROS_ERROR("Received invalid msg");
         }
-
     }
 
     void analysisMovement(const nav_msgs::Odometry::ConstPtr& msg)
@@ -160,7 +165,7 @@ public:
         rs2::config config;        
         config.enable_stream(RS2_STREAM_COLOR, width, height, RS2_FORMAT_RGBA8, fps);
         config.enable_stream(RS2_STREAM_DEPTH, width, height, RS2_FORMAT_Z16, fps);
-        depth_M_color.buildFrom(vpTranslationVector(-0.015,0,0), vpQuaternionVector(0,0,0,1));
+        depth_M_color_.buildFrom(vpTranslationVector(-0.015,0,0), vpQuaternionVector(0,0,0,1));
         // *** Try to open Camera
         try { realsense_.open(config);}
         catch (const vpException &e) {
@@ -181,11 +186,10 @@ public:
             ROS_INFO("  kud = %f \t kdu = %f", camDepth_.get_kud(), camDepth_.get_kdu());
         }        
         // *** Resize images
-        I_color.resize(height, width);
-        I_gray.resize(height, width);
-        I_depth.resize(height, width);
-        I_depth_raw.resize(height, width);
-        I_matches.resize(height, 2*width); 
+        I_color_.resize(height, width);
+        I_gray_.resize(height, width);
+        I_depth_.resize(height, width);
+        I_depth_raw_.resize(height, width);
         return true;       
     }
 
@@ -208,21 +212,42 @@ public:
     }
     
     void getFrame(){
-        looptime = vpTime::measureTimeMs() - start;
-        times_vec.push_back(looptime);
-        fps_measured = 1/(looptime/1000);
+        looptime_ = vpTime::measureTimeMs() - start_;
+        timesVec_.push_back(looptime_);
+        fps_measured_ = 1/(looptime_/1000);
 
-        start = vpTime::measureTimeMs();
-        realsense_.acquire((unsigned char *) I_color.bitmap, (unsigned char *) I_depth_raw.bitmap, NULL, NULL);
-        vpImageConvert::convert(I_color, I_gray);
-        vpDisplay::display(I_gray);
-        vpDisplay::displayText(I_gray, 10, 10, "Detection and localization in process...", vpColor::red);
-        vpDisplay::displayText(I_gray, 30, 10, "FPS measured: " + std::to_string(fps_measured) , vpColor::red);
+        start_ = vpTime::measureTimeMs();
+        realsense_.acquire((unsigned char *) I_color_.bitmap, (unsigned char *) I_depth_raw_.bitmap, NULL, NULL);
+        vpImageConvert::convert(I_color_, I_gray_);
+        if (useColor_){
+            vpDisplay::display(I_color_);
+            vpDisplay::displayText(I_color_, 10, 10, "FPS measured: " + std::to_string(fps_measured_) , vpColor::red);
+        } else {
+            vpDisplay::display(I_gray_);
+            vpDisplay::displayText(I_gray_, 10, 10, "FPS measured: " + std::to_string(fps_measured_) , vpColor::red);
+        }
+    }
+
+    bool validPose(){
+        bool valid_status = false;
+        float tolerance = 0.1;
+        float transY = cMo_[0][3];
+        float transZ = cMo_[1][3];               
+        float d = sqrt(pow(transY,2) + pow(transZ,2));
+        float alpha = alphaDegree_*(M_PI/180);
+        float resultH = d*sin(alpha);
+
+        if ( resultH > hk_+tolerance || resultH < hk_-tolerance){
+            if (verbose_) {
+                ROS_INFO("Detected object is on the ground");}
+            valid_status  =true;
+        }
+        return valid_status;
     }
 
     void executeCB(const detection_localisation::CamDetectionGoalConstPtr &goal)
     {
-        double start = vpTime::measureTimeSecond();
+        double detectionStart = vpTime::measureTimeSecond();
         STATUS = STATUS_CHECK_DATA;
         // STATUS = STATUS_TEST;
         bool proceed = true;        
@@ -232,9 +257,9 @@ public:
         unsigned int matches;
 
         while (server_.isActive() && proceed && ros::ok()) {
-            // *** Check if preempt is requested
-            if (server_.isPreemptRequested())
+            if (server_.isPreemptRequested()) {
                 STATUS = STATUS_PREEMPTED;
+            }
 
             switch (STATUS)
             {
@@ -251,7 +276,7 @@ public:
                         STATUS = STATUS_ABORTED; 
                     }              
                     
-                    // Check file for object model
+                    // ***Check file for object model
                     if (vpIoTools::checkFilename(goal->file_3Dmodel)) {
                         modelFile_ = goal->file_3Dmodel;
                     } else {
@@ -281,9 +306,13 @@ public:
                     ROS_INFO("STATUS: INIT");
                     success_ = false;
                     // *** Display settings                    
-                    unsigned int _posx = 100, _posy = 50;        
-                    d_g.init(I_gray, _posx, _posy, "Color stream");                  
-
+                    unsigned int _posx = 100, _posy = 50;
+                    if (useColor_) {
+                        d_c.init(I_color_, _posx, _posy, "Color stream");
+                    } else {
+                        d_g.init(I_gray_, _posx, _posy, "Gray stream");
+                    }    
+                     
                     // *** Tracker settings
                     tracker.setOgreVisibilityTest(false);
                     tracker.setDisplayFeatures(true);
@@ -302,7 +331,6 @@ public:
                         me.setSampleStep(4);
                         me.setNbTotalSample(250);
                         tracker.setMovingEdge(me);
-                        // cam.initPersProjWithoutDistortion(839, 839, 325, 243);
                         tracker.setCameraParameters(camColor_);
                         tracker.setAngleAppear(vpMath::rad(98));
                         tracker.setAngleDisappear(vpMath::rad(98));
@@ -326,8 +354,8 @@ public:
                         keypoint.setRansacThreshold(0.005);
                     }                     
                     STATUS = STATUS_SEARCHING;
-                    ROS_INFO("INIT done");
-                    start = vpTime::measureTimeMs();
+                    ROS_INFO("INIT DONE");
+                    start_ = vpTime::measureTimeMs();
                     break;
                 }
 
@@ -337,142 +365,145 @@ public:
                 }
 
                 case 3:     // STATUS_TEST
-                {                    
-                    // *** Test Mean, Stdev, Median
-                    // std::vector<double> test;
-                    // test.push_back(0.0);
-                    // test.push_back(0.2);
-                    // test.push_back(0.0);
-                    // test.push_back(0.1);
-                    // test.push_back(0.3);                    
-                    // ROS_INFO("Mean: %f und Stdev: %f",vpMath::getMean(test), vpMath::getStdev(test));
-                    // ROS_INFO("Median Soll: 0.1   Ist: %f",getMedian(test));
-                    // test.push_back(0.0);
-                    // test.push_back(0.4);
-                    // test.push_back(0.7);
-                    // test.push_back(0.0);
-                    // ROS_INFO("Median Soll: 0.1   Ist: %f",getMedian(test));
-                    // test.push_back(0.9);
-                    // ROS_INFO("Median gerade Vec.size -> /2 aufrunden ->  Ist: %f",getMedian(test));
-
-                    // *** Check Angles from H
-                    std::vector<double> v{0.6568678029550146,-0.046966760660189066,0.7525287766825592,0,-0.0784101145291276,-0.9968920972698805,0.006224728234767274,0,0.7499120732530682,-0.0630959059174174,-0.6585216693820678,0,0.015625173638133094,0.3034115542624131,0.4425090445578807,1};
-                    vpHomogeneousMatrix H, HT;
-                    for (int col=0; col<4;col++)
-                    {
-                        for (int row=0; row<4;row++)
-                        {
-                            H[col][row] = v[row+col*4];
-                        }
-                    }
-                    printHomogeneousMatrix(H);                
-                    getRPY(H, true, true);
-
-                    for (int row=0; row<4;row++)
-                    {
-                        for (int col=0; col<4;col++)
-                        {
-                            HT[col][row] = v[col+row*4];
-                        }
-                    }
-                    printHomogeneousMatrix(HT);
-                    getRPY(HT, true, true);
-                    
+                {
+                    ROS_INFO("STATUS TEST");                                       
                     STATUS = STATUS_IDLE;
                     break;
                 }
 
                 case 5:     // STATUS_SEARCHING
                 {
-                    // ROS_INFO("STATUS: SEARCHING");
                     getFrame();                                    
                                         
                     double error, elapsedTime;
-                    keypoint.matchPoint(I_gray, camColor_, cMo_, error, elapsedTime);
+                    if (useColor_){
+                        keypoint.matchPoint(I_color_, camColor_, cMo_, error, elapsedTime);
+                    } else {
+                        keypoint.matchPoint(I_gray_, camColor_, cMo_, error, elapsedTime);
+                    }
+                    
                     matches = keypoint.getMatchedPointNumber();
                     if (matches < MACTHES_THRESHOLD && !moving_ ){
                         feedback_.state = STATE_SEARCHING;
                         server_.publishFeedback(feedback_);
                         ROS_INFO("PUBLISH FEEDBACK state %i (Searching)", feedback_.state );
                     }
+                    if (verbose_) {
+                        ROS_INFO("Matches: %i", matches); 
+                    }
 
                     if (matches > MACTHES_THRESHOLD) 
                     {
-                        // ROS_INFO("Matches: %i", matches);                       
-                        tracker.setPose(I_gray, cMo_);
+                        if (useColor_){
+                            tracker.setPose(I_color_, cMo_);
+                        } else {
+                            tracker.setPose(I_gray_, cMo_);
+                        }
+                        
                         feedback_.estimated_pose = createPosesStamped(cMo_);
                         feedback_.state = STATE_FOUND_MATCH;
+                        
+                        if (useColor_) {
+                            tracker.display(I_color_, cMo_, camColor_, vpColor::red, 2);                   
+                            vpDisplay::displayFrame(I_color_, cMo_, camColor_, 0.025, vpColor::none, 3);                            
+                        } else {
+                            tracker.display(I_gray_, cMo_, camColor_, vpColor::red, 2);                   
+                            vpDisplay::displayFrame(I_gray_, cMo_, camColor_, 0.025, vpColor::none, 3);
+                        }
 
-                        tracker.display(I_gray, cMo_, camColor_, vpColor::red, 2);                   
-                        vpDisplay::displayFrame(I_gray, cMo_, camColor_, 0.025, vpColor::none, 3);
-
-                        if (!moving_ && reached_){ // && reached 
-                            ROS_INFO("Not moving");
+                        if (!moving_ && reached_){  
                             STATUS = STATUS_POSE_REFINEMENT;
                             cMoVec_.clear();
                             frame = 0;
                         }
                         server_.publishFeedback(feedback_);
-                        ROS_INFO("PUBLISH FEEDBACK state %i", feedback_.state );
+                        ROS_INFO("PUBLISH FEEDBACK state %i (Found Matches)", feedback_.state );
                     } else {
                         reached_ = false;
                     }
-                    vpDisplay::flush(I_gray);                   
+                    if (useColor_){
+                        vpDisplay::flush(I_color_);
+                    } else {
+                        vpDisplay::flush(I_gray_);
+                    }                                       
                     break; 
                 }
                     
-                case 10:    // STATUS_POSE_REFINEMENT: case robot stops moving -> Start to calculate finale cMo_                                    
+                case 10:    // STATUS_POSE_REFINEMENT                                   
                 {    
-                    // ROS_INFO("STATUS: POSE REFINEMENT");
                     feedback_.state = STATE_REFINE;
 
                     getFrame();
                     
                     double error, elapsedTime;
-                    keypoint.matchPoint(I_gray, camColor_, cMo_, error, elapsedTime);
+                    if (useColor_) {
+                        keypoint.matchPoint(I_color_, camColor_, cMo_, error, elapsedTime);
+                    } else {
+                        keypoint.matchPoint(I_gray_, camColor_, cMo_, error, elapsedTime);
+                    }                    
                     matches = keypoint.getMatchedPointNumber();
-                    if (matches > MACTHES_THRESHOLD) 
+                    if (verbose_) {
+                        ROS_INFO("Matches: %i", matches);
+                    }
+                    if (matches > MACTHES_THRESHOLD && validPose()) 
                     {
-                        tracker.setPose(I_gray, cMo_);   
+                        if (useColor_){
+                            tracker.setPose(I_color_, cMo_);
+                        } else {
+                            tracker.setPose(I_color_, cMo_);
+                        }   
                         cMoVec_.push_back(cMo_);
                         frame++;
-                        if (frame >= frameThreshold)
+                        if (frame >= frameThreshold_)
                         {
-                            computeResult(cMo_);                                                        
-                            // ROS_INFO("STDV Translation: %f %f %f", result_.translation_stdev.x, result_.translation_stdev.y, result_.translation_stdev.z);
-                            // ROS_INFO("STDV Rotation: %f %f %f", result_.rotation_stdev.x, result_.rotation_stdev.y, result_.rotation_stdev.z);
+                            computeResult(cMo_);     // überschreibt cMo_ mit median cMo                                                   
                             success_ = true;
                             feedback_.state = STATE_FINISH;
                             STATUS = STATUS_END_DETECTION;                        
                         }
-                        tracker.display(I_gray, cMo_, camColor_, vpColor::red, 2);                   
-                        vpDisplay::displayFrame(I_gray, cMo_, camColor_, 0.025, vpColor::none, 3);                        
+                        if (useColor_) {
+                            tracker.display(I_color_, cMo_, camColor_, vpColor::red, 2);                   
+                            vpDisplay::displayFrame(I_color_, cMo_, camColor_, 0.025, vpColor::none, 3);
+                        } else {
+                            tracker.display(I_gray_, cMo_, camColor_, vpColor::red, 2);                   
+                            vpDisplay::displayFrame(I_gray_, cMo_, camColor_, 0.025, vpColor::none, 3);
+                        }
+                        
                     } 
                     // Was wenn hier doch keine Matches gefunden werden?
                     // else {
                     //     STATUS = STATUS_SEARCHING;
                     // }
-                    vpDisplay::flush(I_gray);
+                    if (useColor_) {
+                        vpDisplay::flush(I_color_);
+                    } else {
+                        vpDisplay::flush(I_gray_);
+                    }
+                    
                     server_.publishFeedback(feedback_);
-                    ROS_INFO("PUBLISH FEEDBACK state %i, Frame %d", feedback_.state, frame );
+                    if (frame ==1) {
+                        ROS_INFO("PUBLISH FEEDBACK state %i (Pose Refinement)", feedback_.state );
+                    }
+                    if (verbose_){
+                        ROS_INFO("PUBLISH FEEDBACK state %i (Pose Refinement); Frame %d", feedback_.state, frame );
+                    }
                     break;
                 }                   
                 case 500:   // STATUS_END_DETECTION
                 {
                     ROS_INFO("STATUS: EXECUTION FINISHED!");
                     if (verbose_) {
-                        double detectionTime = vpTime::measureTimeSecond() - start;                        
+                        double detectionTime = vpTime::measureTimeSecond() - detectionStart;                        
                         ROS_INFO("Processing time: %.2f min", detectionTime/60);
                     } 
-                    // saveData();
+
                     if (success_) {
                         result_.object_pose = createPosesStamped(cMo_); 
                         result_.angles = getAngles(cMo_);
                         server_.setSucceeded(result_);
                         ROS_INFO("SEARCH SUCCEEDED: FOUND %s!", objectName_.c_str());
-                    } //else {
+                    } 
                     STATUS = STATUS_EXIT;
-                    // }
                     break;
                 }
                 case 990:   // STATUS_PREEMPTED
@@ -489,30 +520,14 @@ public:
                     STATUS = STATUS_EXIT;
                     break;
                 }
-                case 999:   // STATUS_EXIT LOOP
+                case 999:   // STATUS_EXIT
                 {
                     ROS_INFO("STATUS: EXIT");
                     proceed = false;  
                     break;  
                 }     
             }
-        }
-        // *** Send Feedback only when cMo_ is different to cMo_prev             
-        // cMo.print(); std::cout << std::endl;
-        // printHomogeneousMatrix(cMo);
-        // printRPY(cMo_);
-        // vpMatrix M;
-        // vpMatrix::sub2Matrices(cMo_prev, cMo_, M);
-        // double e = 0.1;
-        // if (M.getMaxValue() > e){                    
-        //     printMatrix(M); 
-        //     ROS_INFO("Max difference is: %.3f", M.getMaxValue());
-        //     sendFeedback(cMo);
-        // }                
-        // cMo_prev = cMo_;
-        // *** Print Feedback
-        // if (feedback_.state != feedback_previous.state) {ROS_INFO("Feedback state switched to %i", feedback_.state );}              
-        // feedback_previous = feedback_;   
+        } 
     }
 
     void printHomogeneousMatrix(const vpHomogeneousMatrix M)
@@ -528,14 +543,7 @@ public:
         s1 << "[" << M[1][0] << "; " << M[1][1] << "; " <<M[1][2]<< "; " << M[1][3] << "]";
         s2 << "[" << M[2][0] << "; " << M[2][1] << "; " <<M[2][2]<< "; " << M[2][3] << "]";
         s3 << "[" << M[3][0] << "; " << M[3][1] << "; " <<M[3][2]<< "; " << M[3][3] << "]";
-        ROS_INFO("\n %s\n %s\n %s\n %s\n", s0.str().c_str(), s1.str().c_str(), s2.str().c_str(), s3.str().c_str());
-
-        // std::string s1;
-        // s1 = "[%.2f; %.2f; %.2f; %.2f]", M[0][0], M[0][1], M[0][2], M[1][3];
-        // ROS_INFO("[%.2f; %.2f; %.2f; %.2f]", M[0][0], M[0][1], M[0][2], M[0][3] );
-        // ROS_INFO("[%.2f; %.2f; %.2f; %.2f]", M[1][0], M[1][1], M[1][2], M[1][3] );
-        // ROS_INFO("[%.2f; %.2f; %.2f; %.2f]", M[2][0], M[2][1], M[2][2], M[2][3] );
-        // ROS_INFO("[%.2f; %.2f; %.2f; %.2f]", M[3][0], M[3][1], M[3][2], M[3][3] );   
+        ROS_INFO("\n %s\n %s\n %s\n %s\n", s0.str().c_str(), s1.str().c_str(), s2.str().c_str(), s3.str().c_str()); 
     }
     
     void printMatrix(const vpMatrix& M)
@@ -597,26 +605,26 @@ public:
             roty_vec.push_back(euler_angles[1]);    // nick = pitch
             rotx_vec.push_back(euler_angles[2]);    // roll
 
-            // ROS_INFO("px: %f; py: %f; pz: %f; rotx: %f; roty %f; rotz: %f", px_vec[i], py_vec[i], pz_vec[i], rotx_vec[i], roty_vec[i], rotz_vec[i]);
+            if (verbose_) {
+                ROS_INFO("px: %f; py: %f; pz: %f; rotx: %f; roty %f; rotz: %f", px_vec[i], py_vec[i], pz_vec[i], rotx_vec[i], roty_vec[i], rotz_vec[i]);
+            }
         }  
 
         // *** Mean     
         // M[0][3] = vpMath::getMean(px_vec);
         // M[1][3] = vpMath::getMean(py_vec);
         // M[2][3] = vpMath::getMean(pz_vec);
-        // rotz    = vpMath::getMean(rotz_vec)*(M_PI/180);    // Umwandlung in Radian für R.build
+        // rotz    = vpMath::getMean(rotz_vec)*(M_PI/180);    
         // roty    = vpMath::getMean(roty_vec)*(M_PI/180);    
         // rotx    = vpMath::getMean(rotx_vec)*(M_PI/180);
         // R.buildFrom(vpRzyxVector(rotz, roty, rotx)); 
         // M.insert(R);   
 
-
         // Median
-        // vpMath::getMedian()
         M[0][3] = getMedian(px_vec);
         M[1][3] = getMedian(py_vec);
         M[2][3] = getMedian(pz_vec);
-        rotz    = getMedian(rotz_vec)*(M_PI/180);    // Umwandlung in Radian für R.build
+        rotz    = getMedian(rotz_vec)*(M_PI/180);   
         roty    = getMedian(roty_vec)*(M_PI/180);    
         rotx    = getMedian(rotx_vec)*(M_PI/180);
         R.buildFrom(vpRzyxVector(rotz, roty, rotx)); 
@@ -629,8 +637,6 @@ public:
         result_.rotx_stdev = vpMath::getStdev(rotx_vec);
         result_.roty_stdev = vpMath::getStdev(roty_vec);
         result_.rotz_stdev = vpMath::getStdev(rotz_vec);
-        // result_.rotx_stdev = vpMath::getStdev(rotx_vec);
-        // ROS_INFO("rotx %f", result_.rotx_stdev);
     } 
 
     Eigen::Vector3d getRPY(const vpHomogeneousMatrix& M, bool output=false, bool degree=false) 
@@ -645,9 +651,8 @@ public:
                 rotation_matrix(ii, jj) = R[ii][jj];
             }
         }
-        // printMatrix(rotation_matrix);
 
-        // 2.1 Converting the rotation matrix to Euler angle
+        // *** Converting the rotation matrix to Euler angle
         // ZYX order intrinsic -> extrinsic (unitXYZ): roll around x axis, then around y axis pitch, finally around z axis yaw, 
         // 0 for X ax,is, 1 for Y axis, 2 for Z axis        
         Eigen::Vector3d euler_angles = rotation_matrix.eulerAngles(2, 1, 0);    

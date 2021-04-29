@@ -55,6 +55,8 @@ protected:
     int STATUS_DETECT_WITH_CAM = 10;
     int STATUS_END_DETECTION = 500;
     int STATUS_EXIT = 999;  
+
+    int MACTHES_THRESHOLD = 33;
     
     std::string targetName_;
     std::string objectName_;
@@ -69,11 +71,11 @@ protected:
 
     // Camera Settings
     vpRealSense2 realsense_;
-    vpDisplayOpenCV d_c, d_d;
+    vpDisplayOpenCV d_c, d_d, d_g;
     vpCameraParameters camColor_, camDepth_; 
     vpImage<vpRGBa> imgColor_; 
-    vpImage<unsigned char> I_depth;
-    vpImage<uint16_t> I_depth_raw; 
+    vpImage<unsigned char> I_depth_, I_gray_;
+    vpImage<uint16_t> I_depth_raw_; 
     vpHomogeneousMatrix cMo_;
     std::vector<vpHomogeneousMatrix> cMoVec_; 
 
@@ -82,7 +84,7 @@ protected:
     std::vector<double> pxStat_, pyStat_, pzStat_, rotxStat_, rotyStat_, rotzStat_;
 
     std::vector<double> times_vec;    
-    bool useCam_, verbose_;
+    bool useCam_, verbose_, useColor_;
     double start, looptime, fps_measured;  
     int pose_, nr_, nrThreshold_, nrPoses_, matches_;    
     
@@ -95,6 +97,7 @@ public:
         nh.param<std::string>("targetName", targetName_, "Goesser_27_56_");
         nh.param<std::string>("learning_data", learningData_, "");
         nh.param<bool>("useCam", useCam_, false);
+        nh.param<bool>("useColorImg", useColor_, false);
         nh.param<bool>("verbose", verbose_, true);
         nh.param<int>("numberOfPoses", nrPoses_, 12);
         nh.param<int>("numberImagesPerPose", nrThreshold_, 20);
@@ -134,8 +137,9 @@ public:
         }        
         // *** Resize images
         imgColor_.resize(height, width);
-        I_depth.resize(height, width);
-        I_depth_raw.resize(height, width);
+        I_gray_.resize(height, width);
+        I_depth_.resize(height, width);
+        I_depth_raw_.resize(height, width);
         return true;       
     }
 
@@ -165,12 +169,15 @@ public:
         fps_measured = 1/(looptime/1000);
         start = vpTime::measureTimeMs();
 
-        realsense_.acquire((unsigned char *) imgColor_.bitmap, (unsigned char *) I_depth_raw.bitmap, NULL, NULL);
-        // vpImageConvert::convert(imgColor_, I_gray);
-        vpDisplay::display(imgColor_);
-        vpDisplay::displayText(imgColor_, 10, 10, "Detection and localization in process...", vpColor::red);
-        vpDisplay::displayText(imgColor_, 30, 10, "FPS measured: " + std::to_string(fps_measured) , vpColor::red);
-
+        realsense_.acquire((unsigned char *) imgColor_.bitmap, (unsigned char *) I_depth_raw_.bitmap, NULL, NULL);
+        if (useColor_) {
+            vpDisplay::display(imgColor_);
+            vpDisplay::displayText(imgColor_, 30, 10, "FPS measured: " + std::to_string(fps_measured) , vpColor::red);
+        } else {
+            vpImageConvert::convert(imgColor_, I_gray_);
+            vpDisplay::display(I_gray_);
+            vpDisplay::displayText(I_gray_, 30, 10, "FPS measured: " + std::to_string(fps_measured) , vpColor::red);
+        }      
     }
 
     void getFrameFile(){
@@ -182,6 +189,27 @@ public:
         }
         vpImageIo::read(imgColor_, pathTargetFolder_ + "linear/" + targetName_ + "Pose"+ std::to_string(pose_) +"_nr"+ std::to_string(nr_)+ ".jpg");
         vpDisplay::display(imgColor_);
+    }
+
+
+    bool validPose(){
+        bool valid_status = false;
+        // vpTranslationVector trans;
+        // cMo_.extract(trans);
+        float transY = cMo_[1][3];
+        float transZ = cMo_[2][3];
+        float hk = 0.55;
+        float alpha = 16*(M_PI/180);
+        float tolerance = 0.1;        
+        float d = sqrt(pow(transY,2) + pow(transZ,2));
+        float resultH = d*sin(alpha);
+
+        // ROS_INFO("Y: %f; Z: %f; result hk: %f", transY, transZ, d);
+        if ( resultH > hk+tolerance || resultH < hk-tolerance){
+            ROS_INFO("Valid H");
+            valid_status  =true;
+        }
+        return valid_status;
     }
 
     void executeCB()
@@ -250,8 +278,12 @@ public:
                 {
                     ROS_INFO("STATUS: INIT");
                     // *** Display settings                    
-                    unsigned int _posx = 100, _posy = 50;        
-                    d_c.init(imgColor_, _posx, _posy, "Color stream");
+                    unsigned int _posx = 100, _posy = 50; 
+                    if (useColor_) {
+                        d_c.init(imgColor_, _posx, _posy, "Color stream");
+                    } else {
+                        d_g.init(I_gray_, _posx, _posy, "Gray stream");
+                    }                            
                     // d_d.init(       I_depth, _posx + imgColor_.getWidth()+10,  _posy,                          "Depth stream");
 
                     // *** Tracker settings
@@ -307,7 +339,8 @@ public:
                 }
 
                 case 3:     // STATUS_TEST
-                {                     
+                {  
+                    ROS_INFO("STATUS TEST");                   
                     STATUS = STATUS_IDLE;
                     break;
                 }
@@ -356,30 +389,33 @@ public:
                 {    
                     getFrameCam();
                     double error, elapsedTime;
-                    keypoint.matchPoint(imgColor_, camColor_, cMo_, error, elapsedTime);
-                    // matches = keypoint.getMatchedPointNumber();
-                    // ROS_INFO("Matches: %i", matches);
-                    // {
-                    //     tracker.setPose(imgColor_, cMo_);   
-                    //     cMoVec_.push_back(cMo_);
-                    //     frame++;
-                    //     ROS_INFO("Frame %i", frame);
-                    //     if (frame >= frameThreshold)
-                    //     {
-                    //         // *** Compute resulting cMo_ from cMoVec_                        
-                    //         // computeResult(cMo_, result_.translation_stdev, result_.rotation_stdev);  
-                    //         computeResult(cMo_);                                                        
-                    //         // ROS_INFO("STDV Translation: %f %f %f", result_.translation_stdev.x, result_.translation_stdev.y, result_.translation_stdev.z);
-                    //         // ROS_INFO("STDV Rotation: %f %f %f", result_.rotation_stdev.x, result_.rotation_stdev.y, result_.rotation_stdev.z);
+                    if (useColor_){
+                        keypoint.matchPoint(imgColor_, camColor_, cMo_, error, elapsedTime);
+                    } else {
+                        keypoint.matchPoint(I_gray_, camColor_, cMo_, error, elapsedTime);
+                    }
+                    
+                    unsigned int matches = keypoint.getMatchedPointNumber();
 
-                   //         STATUS = STATUS_END_DETECTION;                        
-                    //     }
-
-                    //     tracker.display(imgColor_, cMo_, camColor_, vpColor::red, 2);                   
-                    //     vpDisplay::displayFrame(imgColor_, cMo_, camColor_, 0.025, vpColor::none, 3);
-                        
-                    // } 
-                    // vpDisplay::flush(imgColor_);
+                    float distance = sqrt(pow(cMo_[1][3],2) + pow(cMo_[2][3],2));
+                    ROS_INFO("Matches: %i; Distanz Cam-Ob: %f", matches,distance);                    
+                    if (matches > MACTHES_THRESHOLD ) //&& validPose())
+                    {
+                        if (useColor_){
+                            tracker.setPose(imgColor_, cMo_);   
+                            tracker.display(imgColor_, cMo_, camColor_, vpColor::red, 2);                   
+                            vpDisplay::displayFrame(imgColor_, cMo_, camColor_, 0.025, vpColor::none, 3);
+                        } else {
+                            tracker.setPose(I_gray_, cMo_);   
+                            tracker.display(I_gray_, cMo_, camColor_, vpColor::red, 2);                   
+                            vpDisplay::displayFrame(I_gray_, cMo_, camColor_, 0.025, vpColor::none, 3);
+                        }                        
+                    } 
+                    if (useColor_) {
+                        vpDisplay::flush(imgColor_);
+                    } else {
+                        vpDisplay::flush(I_gray_);
+                    }
                     break;
                 }                   
                 case 500:   // STATUS_END_DETECTION
@@ -534,7 +570,7 @@ public:
                 rotation_matrix(ii, jj) = R[ii][jj];
             }
         }
-        // 2.1 Converting the rotation matrix to Euler angle
+        // *** Converting the rotation matrix to Euler angle
         // ZYX order intrinsic -> extrinsic (unitXYZ): roll around x axis, then around y axis pitch, finally around z axis yaw, 
         // 0 for X ax,is, 1 for Y axis, 2 for Z axis        
         Eigen::Vector3d euler_angles = rotation_matrix.eulerAngles(2, 1, 0);    
@@ -555,7 +591,22 @@ public:
         }        
         return euler_angles;
     }   
-    
+
+    void printHomogeneousMatrix(const vpHomogeneousMatrix M)
+    {
+        int precision = 3;
+        std::stringstream s0, s1, s2, s3;
+        s0.precision(precision);
+        s1.precision(precision);
+        s2.precision(precision);
+        s3.precision(precision);
+
+        s0 << "[" << M[0][0] << "; " << M[0][1] << "; " <<M[0][2]<< "; " << M[0][3] << "]";
+        s1 << "[" << M[1][0] << "; " << M[1][1] << "; " <<M[1][2]<< "; " << M[1][3] << "]";
+        s2 << "[" << M[2][0] << "; " << M[2][1] << "; " <<M[2][2]<< "; " << M[2][3] << "]";
+        s3 << "[" << M[3][0] << "; " << M[3][1] << "; " <<M[3][2]<< "; " << M[3][3] << "]";
+        ROS_INFO("\n %s\n %s\n %s\n %s\n", s0.str().c_str(), s1.str().c_str(), s2.str().c_str(), s3.str().c_str());   
+    }  
 };
 
 

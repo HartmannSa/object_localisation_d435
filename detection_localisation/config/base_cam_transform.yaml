@@ -1,8 +1,25 @@
 target_frame: camera_arm_color_optical_frame
 source_frame: base_link
+## alpha 16°, hk 0.55m
 x: 0.32
 y: 0.21
 z: 0.55         # Kamerahöhe - BaseKOShöhe
-roll: -1.9199
-pitch: 0   # 1.5708 - alpha
+roll: -1.850   # 1.5708 + alpha
+pitch: 0   
 yaw:  -1.5708
+
+## alpha 20°, hk 0.55m
+# x: 0.32
+# y: 0.21
+# z: 0.55         # Kamerahöhe - BaseKOShöhe
+# roll: -1.9199   # 1.5708 + alpha[rad] = (90°+alpha°)*pi/180
+# pitch: 0   
+# yaw:  -1.5708
+
+## alpha 35°, hk 1.38m
+# x: 0.32
+# y: 0.21
+# z: 1.38         # Kamerahöhe - BaseKOShöhe
+# roll: -2.1817   # 1.5708 + alpha
+# pitch: 0   
+# yaw:  -1.5708

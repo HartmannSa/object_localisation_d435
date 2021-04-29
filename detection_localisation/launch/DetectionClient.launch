@@ -1,9 +1,9 @@
 <?xml version="1.0" ?>
 <launch>
-  <arg name="object_name"         default="Goesser_20_55_" />
+  <arg name="object_name"         default="Goesser_16_55_" />
   <arg name="path"                default="$(find detection_localisation)/model/$(arg object_name)/" />
   <arg name="file_3Dmodel"        default="$(arg path)$(arg object_name).cao" />
-  <arg name="learning_data"       default="$(arg path)$(arg object_name)12_learning_data.bin" />
+  <arg name="learning_data"       default="$(arg path)$(arg object_name)37_learning_data.bin" />
   <arg name="tracker_settings"    default="$(arg path)$tracker.xml" />
   <arg name="detection_settings"  default="$(arg path)$detection-config.xml" />
 
