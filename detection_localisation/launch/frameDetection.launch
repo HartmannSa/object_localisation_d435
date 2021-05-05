@@ -1,14 +1,16 @@
 <?xml version="1.0" ?>
 <launch>
   <arg name="target"      default="Goesser_16_55_"/>
+  <!-- <arg name="target"      default="Goesser_35_138_"/> -->
   <arg name="posesNr"      default="50"/>
 
   <!--Start detection-->
   <node pkg="detection_localisation" type="frame_detection" name="frame_detection_node" output="screen" >  
-    <param name="path_package"              type="str"    value="$(find learn_object)/model/" /> 
+    <!-- <param name="path_package"              type="str"    value="$(find learn_object)/model/" />  -->
+    <param name="path_package"              type="str"    value="$(find detection_localisation)/model/" /> 
     <param name="targetName"                type="str"    value="$(arg target)" /> 
     <param name="learning_data"             type="str"    value="$(arg target)37_learning_data.bin" /> 
-    <param name="objectName"                type="str"    value="Goesser" /> 
+    <param name="objectName"                type="str"    value="$(arg target)" /> 
     <param name="verbose"                   type="bool"   value="true" /> 
     <param name="useCam"                    type="bool"   value="true" />
     <param name="useColorImg"               type="bool"   value="true" />

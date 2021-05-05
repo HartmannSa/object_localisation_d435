@@ -1,0 +1,14 @@
+<launch> 
+    <arg name="topic_sub"    default="pose_object_1"/> 
+    <arg name="topic_pub"    default="marker_object_1"/> 
+
+    <node name="$(anon MarkerPublisher)" type="spawn_markerObject.py" pkg="helper" output="screen">
+        <param name="dimX"         value="0.4"/>
+        <param name="dimY"         value="0.3"/>
+        <param name="dimZ"         value="0.3"/>
+        <param name="topic_sub"        value="$(arg topic_sub)"/>
+        <param name="topic_pub"        value="$(arg topic_pub)"/>
+    </node> 
+
+</launch>
+

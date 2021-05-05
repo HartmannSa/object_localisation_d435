@@ -4,8 +4,11 @@
   <!--Start detection-->
   <node pkg="detection_localisation" type="detection_server" name="detection_server" output="screen" >  
     <!-- <param name="path_package"              type="str"    value="$(find detection_localisation)" />  -->
-    <param name="verbose"                   type="bool"   value="true" /> 
-    <param name="frameThreshold"            type="int"    value="20" />
+    <param name="verbose"                   type="bool"     value="true" />
+    <param name="useColorImg"               type="bool"     value="true" /> 
+    <param name="frameThreshold"            type="int"      value="30" />
+    <param name="hoeheKamera"               type="double"    value="0.55" />
+    <param name="alphaKameraDegree"         type="double"    value="16" />
   </node>
 
   <!-- Publish Kamera Transform -->

@@ -230,7 +230,7 @@ public:
 
     bool validPose(){
         bool valid_status = false;
-        float tolerance = 0.1;
+        float tolerance = 0.18;
         float transY = cMo_[0][3];
         float transZ = cMo_[1][3];               
         float d = sqrt(pow(transY,2) + pow(transZ,2));
@@ -396,20 +396,15 @@ public:
                     {
                         if (useColor_){
                             tracker.setPose(I_color_, cMo_);
+                            tracker.display(I_color_, cMo_, camColor_, vpColor::red, 2);                   
+                            vpDisplay::displayFrame(I_color_, cMo_, camColor_, 0.025, vpColor::none, 3); 
                         } else {
                             tracker.setPose(I_gray_, cMo_);
-                        }
-                        
-                        feedback_.estimated_pose = createPosesStamped(cMo_);
-                        feedback_.state = STATE_FOUND_MATCH;
-                        
-                        if (useColor_) {
-                            tracker.display(I_color_, cMo_, camColor_, vpColor::red, 2);                   
-                            vpDisplay::displayFrame(I_color_, cMo_, camColor_, 0.025, vpColor::none, 3);                            
-                        } else {
                             tracker.display(I_gray_, cMo_, camColor_, vpColor::red, 2);                   
                             vpDisplay::displayFrame(I_gray_, cMo_, camColor_, 0.025, vpColor::none, 3);
                         }
+                        feedback_.estimated_pose = createPosesStamped(cMo_);
+                        feedback_.state = STATE_FOUND_MATCH;
 
                         if (!moving_ && reached_){  
                             STATUS = STATUS_POSE_REFINEMENT;
@@ -445,7 +440,7 @@ public:
                     if (verbose_) {
                         ROS_INFO("Matches: %i", matches);
                     }
-                    if (matches > MACTHES_THRESHOLD && validPose()) 
+                    if ((matches > MACTHES_THRESHOLD)) // && validPose()) 
                     {
                         if (useColor_){
                             tracker.setPose(I_color_, cMo_);
@@ -478,14 +473,14 @@ public:
                         vpDisplay::flush(I_color_);
                     } else {
                         vpDisplay::flush(I_gray_);
-                    }
+                    }                    
                     
-                    server_.publishFeedback(feedback_);
                     if (frame ==1) {
                         ROS_INFO("PUBLISH FEEDBACK state %i (Pose Refinement)", feedback_.state );
+                        server_.publishFeedback(feedback_);
                     }
                     if (verbose_){
-                        ROS_INFO("PUBLISH FEEDBACK state %i (Pose Refinement); Frame %d", feedback_.state, frame );
+                        ROS_INFO("Frame %d", frame );
                     }
                     break;
                 }                   

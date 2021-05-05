@@ -150,16 +150,16 @@ public:
 
    try {
       transform = tf2_buffer_.lookupTransform(base_frame_, cam_frame_, ros::Time(0));
-      tf2::doTransform(pose_in_camKOS, poseObject_baseKOS_, transform);
-      distance_base_target_ = sqrt(pow(poseObject_baseKOS_.pose.position.x,2) + pow(poseObject_baseKOS_.pose.position.y,2) + pow(poseObject_baseKOS_.pose.position.z,2));
-      ROS_INFO("Distanz to object: %f", distance_base_target_);   
+      tf2::doTransform(pose_in_camKOS, poseObject_baseKOS_, transform);  
       if (abs(poseObject_baseKOS_.pose.position.z) < 0.2)
       {
-        float tolerance = 0.1;
+        distance_base_target_ = sqrt(pow(poseObject_baseKOS_.pose.position.x,2) + pow(poseObject_baseKOS_.pose.position.y,2) + pow(poseObject_baseKOS_.pose.position.z,2));
+        ROS_INFO("Distanz to object: %f", distance_base_target_); 
         float pi = 3.1415;
         float angle_tolerance = 5*(pi/180);
         double angle = tan(poseObject_baseKOS_.pose.position.y/poseObject_baseKOS_.pose.position.x);
-        ROS_INFO("Winkel to object: %f", angle*180/pi);        
+        ROS_INFO("Winkel to object: %f", angle*180/pi);
+        float tolerance = 0.1;        
 
         if ( (distance_base_target_>distance_thres_+tolerance) || (abs(angle) > angle_tolerance) ) // || distance_base_target_<distance_thres_-tolerance ||       
         {
@@ -283,11 +283,24 @@ public:
               const detection_localisation::CamDetectionResultConstPtr& result)
   {
     ROS_INFO("Finished in state [%s]", state.toString().c_str());
+    ROS_INFO("POSE IN CAMERA FRAME");
     ROS_INFO("position: %.3f; %.3f; %.3f [m]", result->object_pose.pose.position.x, result->object_pose.pose.position.y, result->object_pose.pose.position.z );
     ROS_INFO("orientation: %.2f; %.2f; %.2f [degree]", result->angles.x, result->angles.y, result->angles.z );
     ROS_INFO("rotation stdev: %f; %f; %f", result->rotx_stdev, result->roty_stdev, result->rotz_stdev );
     ROS_INFO("translation stdev: %f; %f; %f", result->px_stdev, result->py_stdev, result->pz_stdev );
 
+    geometry_msgs::PoseStamped targetPose_mapKOS_;
+    geometry_msgs::TransformStamped transform;
+
+    try {
+      transform = tf2_buffer_.lookupTransform(map_frame_, cam_frame_, ros::Time(0));
+      tf2::doTransform(result->object_pose, targetPose_mapKOS_, transform); 
+      ROS_INFO("POSE IN MAP FRAME");
+      ROS_INFO("position: %.3f; %.3f; %.3f [m]", targetPose_mapKOS_.pose.position.x, targetPose_mapKOS_.pose.position.y, targetPose_mapKOS_.pose.position.z );
+      ROS_INFO("orientation: %.4f; %.4f; %.4f ; %.4f [quaternion x y z w]", targetPose_mapKOS_.pose.orientation.x, targetPose_mapKOS_.pose.orientation.y, targetPose_mapKOS_.pose.orientation.z, targetPose_mapKOS_.pose.orientation.w );
+    } catch (tf2::TransformException &ex) {
+      ROS_WARN("Failure %s\n", ex.what()); 
+    }
     // calcMoveGoal(result->object_pose);
 
     ros::shutdown();
