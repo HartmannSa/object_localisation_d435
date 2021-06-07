@@ -1,10 +1,10 @@
 <launch>
     <arg name="target"      default="Goesser"/>
     <arg name="path"        default="$(find learn_object)/model/$(arg target)/"/> 
-    <arg name="radius"      default="1.1"/>  <!-- d_OB - dx -->
-    <arg name="dx"          default="0.32"/> 
-    <arg name="dy"          default="0.21"/>  
-    <arg name="number"      default="37"/> 
+    <arg name="radius"      default="1.1"/>  <!-- = d_OB - dx -->
+    <arg name="dx"          default="0.32"/> <!-- Abstand zwischen KameraKOS und BasisKOS -->
+    <arg name="dy"          default="0.21"/> <!-- Abstand zwischen KameraKOS und BasisKOS --> 
+    <arg name="number"      default="37"/> <!-- Anzahl an zu generierenden Posen -->
 
     <node name="pose_calculator" type="calculate_poses_node.py" pkg="helper" output="screen">
         <param name="file_path"             value="$(arg path)"/>
@@ -12,11 +12,11 @@
         <param name="dx"                    value="$(arg dx)"/> 
         <param name="dy"                    value="$(arg dy)"/>
 
-        <param name="linear"                value="false"/>
-        <param name="stepOffset"            value="0.4"/>
-        <param name="stepDistance"          value="0.1"/>
+        <param name="linear"                value="false"/> <!-- Erzeugt Posen entlang linearer Bahn -->
+        <param name="stepOffset"            value="0.4"/>   
+        <param name="stepDistance"          value="0.1"/> <!-- Abstand zwischen einzelnen linearen Posen -->
 
-        <param name="circular"              value="true"/>
+        <param name="circular"              value="true"/> <!-- Erzeugt Posen entlang einer Kreisbahn -->
         <param name="radius"                value="$(arg radius)"/>
         <param name="angle_range"           value="180"/>  
      

@@ -6,7 +6,6 @@
 #include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/Transform.h>
 #include "geometry_msgs/PoseStamped.h"
-// #include <std_msgs/Bool.h>
 #include <std_msgs/String.h>
 #include <fstream>
 #include <tf2_ros/transform_listener.h>

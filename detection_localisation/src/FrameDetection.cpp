@@ -376,7 +376,7 @@ public:
                     if (nr_ >= nrThreshold_){
                         computeStatistics(cMoVec_);
                         matchesStat_ = getStatistic(matchesVec_);
-                        saveData();
+                        // saveData();
                     }
                     
                     tracker.display(imgColor_, H, camColor_, vpColor::red, 2);                   

@@ -49,9 +49,6 @@ def posesToDict(poses):
 
 def save(poses, filename):
     if poses:
-        # rospy.loginfo("Saving:")
-        # rospy.loginfo(poses)
-        # rospy.loginfo("to file "+filename)
         if not os.path.exists(os.path.dirname(filename)):
             try:
                 os.makedirs(os.path.dirname(filename))

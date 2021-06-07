@@ -2,7 +2,7 @@
     <arg name="target"          default="Goesser"/>
     <arg name="path"            default="$(find learn_object)/model/$(arg target)/"/>
     <arg name="folderSave"      default="linear/"/>
-    <arg name="numberImages"    default="1"/>
+    <arg name="numberImages"    default="1"/> <!-- Anzahl Bilder pro Pose -->
     <arg name="filename_poses"  default="poses_circular_base.yaml"/>
     <!-- <arg name="filename_poses"  default="poses_linear.yaml"/> -->
 

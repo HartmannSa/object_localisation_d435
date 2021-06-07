@@ -9,7 +9,7 @@
   <arg name="detection_settings"  default="$(arg path)$detection-config.xml" />
 
   <node pkg="detection_localisation" type="detection_client" name="detection_client" output="screen" > 
-    <param name="path_searchposes"          type="str"    value="$(find detection_localisation)/config/searchPoses.config" /> 
+    <param name="path_searchposes"          type="str"    value="$(find detection_localisation)/config/searchPoses.config" />   <!-- Hier Pfad zu Suchposen vorgeben -->
     <param name="object_name"               type="str"    value="$(arg object_name)" />
     <param name="file_3Dmodel"              type="str"    value="$(arg file_3Dmodel)" />
     <param name="learning_data"             type="str"    value="$(arg learning_data)" />

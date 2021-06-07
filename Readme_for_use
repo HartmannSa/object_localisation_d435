@@ -1,0 +1,156 @@
+********************************************************************
+LAUNCH SUCHE, ERKENNUNG UND LOKALISIERUNG
+
+0.) bashrc file prüfen
+sudo nano ~/.bashrc
+-> Simulation
+#export ROS_MASTER_URI=http://rosmaster:11311
+#export ROS_IP=10.110.130.30
+-> Hardware
+export ROS_MASTER_URI=http://rosmaster:11311
+export ROS_IP=10.110.130.30
+
+
+1.) Welt
+-> Simulation
+roslaunch match_gazebo world_match.launch
+->Hardware
+Welt vorhanden...
+
+2.) Roboter
+-> Simulation:
+roslaunch mir_launch_sim mir.launch
+-> Hardware:
+roslaunch mir_launch_hardware mir.launch
+
+3.) Application (Suche, Erkennung und Lokalisierung eines Objekts)
+roslaunch detection_localisation detectionServer.launch
+roslaunch detection_localisation DetectionClient.launch
+Beachte: benötigt wird 
+- Name des Suchobjekts
+- der Pfad zum 3D Modell im .cao-Dateiformat
+- der Pfad zur Lerndatei (...learning_data.bin)
+ACHTUNG: Defalut path führt nicht in den Lernordner, sondern in den model-Ordner unter detection_localisation!
+AUßERDERM wird der Pfad für die Suchposen vorgegeben (default: "$(find detection_localisation)/config/searchPoses.config")
+
+
+********************************************************************
+VORGEHEN NEUES OBJEKT ANLERNEN
+
+BERECHNUNG UND ANZEIGE DER LERNPOSEN
+1.) roslaunch helper calculate_poses.launch
+z.B.
+roslaunch helper calculate_poses.launch target:="Goesser_35_98_" radius:="1.15"
+Beachte: 
+	- "Circular" = true
+	- Winkelbereich ("angle_range") vorgeben in Grad 
+	- gewünschten Radius vorgeben (zwischen Kamera und Objektursprung)
+	- Objektnamen ("target") vorgeben für Speichern der erzeugten Posen
+
+-> Um die Berechnung "auszulösen" muss in rviz ein NavGoal vorgegeben werden (bzw. eine Pose auf das entsprechende Topic gepublished werden). Diese Pose sollte dem Ursprung des ObjektKOS entsprechen.
+
+2.) rviz
+
+3.) roslaunch helper publish_poses.launch
+Dieses Skript liest eine .yaml datei aus und publisht die darin enthaltenen Posen auf ein topic (default "/target").
+(über publish_marker.launch kann auch die Bierkiste/das Objekt als Form in rviz visualisiert werden)
+z.b.
+roslaunch helper publish_poses.launch filename:="poses_circular.yaml" topic:="/cam" target:="Goesser_35_98_"
+roslaunch helper publish_poses.launch filename:="poses_circular_base.yaml" target:="Goesser_35_98_"
+
+
+AUFNAHME DER LERNFOTOS
+4.) roslaunch learn_object take_learnphotos.launch
+z.B. 
+roslaunch learn_object take_learnphotos.launch target:="Goesser_35_98_"
+Beachte args:
+	- Name des Objekts ("target")
+	- Datei mit abzufahrenden Posen ("filename_poses")
+	- Anzahl an Fotos pro Pose ("numberImages")
+
+
+EXTRAHIEREN DER MERKMALSPUNKTE (MANUELL)
+Manually initialise the photos by clicking the 4 corners of the model
+5.) roslaunch learn_object learn_keypoints.launch target:="Goesser_35_98_" model:="Goesser"
+Beachte: 
+	- richtige Anzahl an Lernfotos einstellen (TrainImageNumber")
+
+
+********************************************************************
+Versuchsreihe Einfluss Kamerapose in Abhängigkeit zur Objektdistanz
+-> Dafür entfernt sich der Roboter entlang einer linearen Bahn von dem Objekt
+
+1) take photos
+roslaunch learn_object take_learnphotos.launch object:="Goesser_35_63_" folderSave:="static/" numberImages:="20" 
+
+2) learn keypoints
+roslaunch learn_object learn_keypoints.launch model:="Goesser" object:="Goesser_35_63_"
+
+3) display Image Stack
+roslaunch helper display_images.launch 
+
+4) Analyse Detection
+roslaunch detection_localisation frameDetection.launch target:="goesser_20_55_" posesNr:="50"
+roslaunch detection_localisation frameDetection.launch target:="Goesser_25_65_" posesNr:="48"
+roslaunch detection_localisation frameDetection.launch target:="Goesser_27_56_" posesNr:="15"
+roslaunch detection_localisation frameDetection.launch target:="Goesser_35_63_" posesNr:="20"
+roslaunch detection_localisation frameDetection.launch target:="Goesser_35_77_" posesNr:="23"
+roslaunch detection_localisation frameDetection.launch target:="Goesser_35_88_" posesNr:="28"
+roslaunch detection_localisation frameDetection.launch target:="Goesser_35_115_" posesNr:="36"
+roslaunch detection_localisation frameDetection.launch target:="Goesser_35_138_" posesNr:="43"
+roslaunch detection_localisation frameDetection.launch target:="Goesser_45_109_" posesNr:="22"
+roslaunch detection_localisation frameDetection.launch target:="Goesser_52_141_" posesNr:="20"
+roslaunch detection_localisation frameDetection.launch target:="Goesser_55_126_" posesNr:="16"
+roslaunch detection_localisation frameDetection.launch target:="Goesser_62_136_" posesNr:="16"
+
+********************************************************************
+Ergebnisse und Daten in "model" Ordner
+
+- Ordnernamen: z.B. "Goesser_16_55" steht für den Bierkasten der Marke Goesser, 
+	dessen Lernfotos mit einer Kamerapose mit einem Blickwinkel von 16° und einer Höhe von 55cm aufgenommen wurden
+	-> in dem Ordner sind die aufgenommenen Lernfotos (Goesser_20_55_1_color.jpg, ...), 
+		die generierte Lerndatei (Goesser_20_55_37_learning_data.bin), 
+		die genutzten Roboterposen (poses_circular_base.yaml),
+		das 3D-Modell (Goesser.cao),
+		die 3D Koordinaten für die manuelle Initialisierung der Lernfotos (Goesser1.init,...),
+		die berechnete Objektpose für jedes Lernfoto (Goesser1.0.pos,...),
+		der Unterordner "keypoints" enthält zur Veranschaulichung die Lernfotos mit den extrahierten Merkmalspunkten,
+		der Unterordner "linear" enthält die Fotos aus der Versuchsreihe zum Einfluss der Kamerapose in Abhängigkeit zur Objektdistanz,
+
+⁻ Ordner CaoModel... enthält die vorbereiteten CaoModel-Datein für die Initialisierung der Lernfotos und den Anlernschritt. Aus diesen Ordnern lassen sich die benötigten Daein für ein neues Goesser-Modell schnell herauskopieren. Ansonsten werden sie nicht benötigt.
+
+- Ordner "imageStacks" enthält Fotos, die im Rahmen der Masterarbeit nützlich waren. 
+
+
+Zusätzliche Skripte im "helper" Ordner
+- display_images: Erzeugen der ImageStacks
+- ps4_controller: Steuern der MIR200 über den Ps4Controller
+
+
+Zusätzliche Skripte
+- roslaunch camera_d435 camera_stream.launch
+	Wie der Name sagt, kann damit das Kamerabild gestreamt werden
+
+- roslaunch detection_localisation frameDetection.launch
+	Je nach Einstellung von useCam wird entweder das Kamerabild oder zu ladende Bilder aus einem Ordner "verarbeitet", d.h. in den Frames findet eine Erkennung und Lokalisierung statt.
+	Nützlich für die Auswertung der Versuchsreihe zur Analyse des Kameraeinflusses in Abhängigkeit der Objektdistanz UND wenn die Erkennung/ Lokalisierung getestet werden soll
+
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 

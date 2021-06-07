@@ -25,7 +25,6 @@ class TargetMarker:
         self.__targetMarker.pose.position = msg.pose.position
         self.__targetMarker.pose.position.z = self.__dimZ/2
         self.__targetMarker.pose.orientation = msg.pose.orientation
-        # self.__targetMarker.ns = "robot"
         self.__targetMarker.id = 0
         self.__targetMarker.type = 1       # 1: cube 2: sphere
         self.__targetMarker.action = 0

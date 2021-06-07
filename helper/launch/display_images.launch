@@ -1,15 +1,16 @@
 <?xml version="1.0" ?>
+<!-- Für die Generierung der ImageStacks -->
 <launch>
   <arg name="nameSave"  default=""/>  
-  <!-- <arg name="folder"    default=""/>  -->
-  <arg name="folder"    default="/keypoints"/> 
+  <!-- <arg name="folder"    default=""/>  --> <!-- verwendet Lernfotos -->
+  <arg name="folder"    default="/keypoints"/> <!-- geht eine Ordnerstruktur tiefer -->
 
   <!--Start Learning-->
   <node pkg="helper" type="displayImages" name="display_images" output="screen" >
     <param name="path"                      type="str"    value="$(find learn_object)/model/"/> 
     <param name="nameSave"                  type="str"    value="$(arg nameSave)"/>
     <param name="extraFolder"               type="str"    value="$(arg folder)"/>
-    <param name="numberOfImages"            type="int"    value="12" />  <!-- "BIS" -> geändert auf last image nr. -->
+    <param name="numberOfImages"            type="int"    value="12" />  <!-- "BIS"  -->
     <param name="startNumber"               type="int"    value="7" /> <!-- VON -->
     <rosparam command="load"              file="$(find helper)/launch/yaml/imagesToDisplay.yaml" />
   </node>

@@ -1,4 +1,0 @@
-Objekt-Kamera Distanzen
-Diagonale: 106
-Höhe Kamera: 103
-Bodenentfernung: 71 cm
